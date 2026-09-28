@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>학교 급식 데이터 분석</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f4f6f9;--panel:#fff;--text:#161a22;--muted:#697386;--line:#e2e7ef;
+  --dark:#20252d;--soft:#eef2f7;--accent:#4a5568;--danger:#b42318;
+  --hover:#f6f8fb;--panel2:#f9fafc;--chartText:#596273;--chartGrid:#e5e9ef;
+  --tooltipBg:#20252d;--tooltipText:#ffffff;--focus:#2563eb;
+  --tray-cell:#ffffff;--tray-empty:#f6f7f9;--tray-text:#252b34;--tray-label:#697386;--tray-stroke:#aeb6bf;
+  --tray-steel1:#c6ccd3;--tray-steel2:#f0f2f4;--tray-steel3:#b9c0c8;--tray-steel4:#e4e8ec;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Pretendard,"Noto Sans KR",Arial,sans-serif}
+button,select,input{font:inherit}
+button{cursor:pointer}
+header{position:sticky;top:0;z-index:100;height:70px;background:rgba(255,255,255,.96);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 38px;backdrop-filter:blur(8px)}
+.logo{font-weight:850;font-size:20px;cursor:pointer;white-space:nowrap}
+nav{display:flex;align-items:stretch;height:100%;gap:3px}
+.nav-item{position:relative;display:flex;align-items:center}
+.nav-btn{height:100%;padding:0 16px;border:0;background:transparent;color:#4f5968;font-weight:650}
+.nav-btn:hover,.nav-btn.active{color:#111;background:#f6f7f9}
+.dropdown{display:none;position:absolute;top:62px;left:0;min-width:225px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:7px;box-shadow:0 16px 38px rgba(25,35,48,.12)}
+.nav-item:hover .dropdown{display:block}
+.dropdown button{width:100%;border:0;background:#fff;text-align:left;padding:11px 12px;border-radius:8px;color:#3d4654}
+.dropdown button:hover{background:#f2f4f7;color:#111}
+.header-actions{display:flex;gap:8px}
+.ghost-btn{border:1px solid var(--line);background:#fff;padding:9px 12px;border-radius:9px;font-weight:650}
+main{max-width:1320px;margin:auto;padding:44px 28px 90px}
+.page{display:none}.page.active{display:block}
+.hero{text-align:center;padding:68px 16px 62px}
+.hero h1{font-size:46px;line-height:1.15;margin:0 0 16px}
+.hero p{margin:0;color:var(--muted);font-size:17px;line-height:1.75}
+.home-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.home-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:34px;min-height:285px;transition:.2s;cursor:pointer}
+.home-card:hover{transform:translateY(-5px);box-shadow:0 16px 40px rgba(32,40,52,.09)}
+.home-icon{font-size:41px;margin-bottom:23px}.home-card h2{font-size:22px;margin:0 0 12px}
+.home-card p{color:var(--muted);line-height:1.75;margin:0}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:24px}
+.page-head h1{font-size:32px;margin:0 0 8px}.page-head p{margin:0;color:var(--muted);line-height:1.55}
+.subtabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab-btn,.chip-btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 13px;font-weight:700;color:#515b68}
+.tab-btn.active,.chip-btn.active{background:var(--dark);border-color:var(--dark);color:#fff}
+.subpage{display:none}.subpage.active{display:block}
+.controls{background:#fff;border:1px solid var(--line);border-radius:15px;padding:20px;margin-bottom:18px}
+.controls-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--line)}
+.controls-title h3{margin:0;font-size:15px}.controls-title small{color:var(--muted)}
+.cache-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:999px;background:#eef4ef;color:#365b3d;font-size:11px;font-weight:750}
+.control-row{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.control{display:flex;flex-direction:column;gap:6px}
+.control label{font-size:12px;color:#737d8d;font-weight:750}
+select,input[type=date],input[type=month],input[type=text],input[type=password]{background:#fff;border:1px solid #ccd3dd;border-radius:9px;padding:10px 11px;min-width:135px;color:#262c35}
+.primary{border:0;border-radius:9px;padding:11px 17px;background:var(--dark);color:#fff;font-weight:780}
+.primary:hover{background:#353c46}
+.status{display:none;margin:0 0 18px;padding:13px 15px;border-radius:10px;background:#eef3fa;color:#3e4f64;font-size:14px;line-height:1.55}
+.status.show{display:block}.status.error{background:#fef3f2;color:var(--danger)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:13px;padding:18px}
+.stat small{display:block;color:var(--muted);font-weight:650;margin-bottom:7px}.stat strong{font-size:23px;overflow-wrap:anywhere}
+.dashboard{display:grid;grid-template-columns:repeat(2,1fr);gap:17px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:15px;padding:20px;min-width:0}
+.panel.full{grid-column:1/-1}.panel h3{font-size:17px;margin:0 0 6px}.panel .desc{font-size:12px;color:#8992a0;margin-bottom:15px;line-height:1.55}
+.chart-box{height:285px;position:relative}
+.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.metric-card{padding:15px;border:1px solid var(--line);border-radius:11px;background:#fbfcfd}
+.metric-card b{display:block;margin-bottom:5px}.metric-card span{color:var(--muted);font-size:13px}
+.season-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px}
+.season-card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:17px}
+.season-card.selected{outline:2px solid #475569}
+.season-card h3{margin:0 0 12px;font-size:19px}
+.rank-item{display:flex;align-items:center;gap:9px;padding:10px;border-radius:9px;background:#f7f8fa;margin-top:8px;cursor:pointer}
+.rank-item:hover{background:#edf0f4}.rank-no{width:24px;font-weight:850}.rank-text{flex:1;min-width:0}
+.rank-text b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.rank-text small{color:var(--muted)}
+.split-visual{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);gap:18px;align-items:start}
+.tray-card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:20px}
+.tray-card h3{margin:0 0 6px}.tray-note{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5}
+.tray-wrap{width:100%;max-width:650px;margin:auto}
+.tray-svg{width:100%;height:auto;display:block}
+.tray-food-label{font-size:16px;font-weight:800;fill:var(--tray-text);text-anchor:middle;dominant-baseline:middle}
+.tray-slot-label{font-size:10px;font-weight:700;fill:var(--tray-label);text-anchor:middle}
+.pref-box{background:#fff;border:1px solid var(--line);border-radius:15px;padding:20px;margin-bottom:18px}
+.pref-head{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:15px}
+.pref-head h3{margin:0}.pref-head p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.pref-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.pref-item{border:1px solid var(--line);background:#fafbfc;border-radius:11px;padding:13px;cursor:pointer;user-select:none}
+.pref-item.active{background:#232a33;color:#fff;border-color:#232a33}.pref-item b{display:block;margin-bottom:4px}.pref-item small{color:#7d8796}.pref-item.active small{color:#cbd2db}
+.favorite-list{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+.favorite{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 11px;font-size:13px}
+.favorite.active{background:#e9edf3;border-color:#aab4c1;font-weight:800}
+.selector-row{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0 0}
+.drill-title{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}
+.data-table{width:100%;border-collapse:collapse;font-size:13px}.data-table th,.data-table td{border-bottom:1px solid var(--line);padding:9px;text-align:right}
+.data-table th:first-child,.data-table td:first-child{text-align:left}.data-table th{color:#667080;font-weight:750;background:#fafbfc}
+.notice{padding:11px 13px;background:#fff8e7;border:1px solid #f1dfab;border-radius:10px;font-size:12px;line-height:1.6;color:#6b5623;margin-top:12px}
+.loading-bar{height:7px;border-radius:99px;background:#dde3ea;overflow:hidden;margin-top:9px}
+.loading-bar>div{height:100%;width:0;background:#697586;transition:width .2s}
+footer{max-width:1320px;margin:0 auto 30px;padding:0 28px;color:#929aa6;font-size:12px;line-height:1.6}
+/* Settings / theme / calendar */
+.settings-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:1000;align-items:center;justify-content:center;padding:22px}
+.settings-backdrop.show{display:flex}.settings-modal{width:min(920px,96vw);max-height:90vh;overflow:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:20px;box-shadow:0 28px 80px rgba(0,0,0,.28)}
+.settings-head{position:sticky;top:0;z-index:2;background:var(--panel);display:flex;justify-content:space-between;align-items:center;padding:20px 22px;border-bottom:1px solid var(--line)}
+.settings-head h2{margin:0}.settings-body{padding:20px 22px 26px;display:grid;gap:18px}.settings-section{border:1px solid var(--line);border-radius:15px;padding:18px;background:var(--panel)}
+.settings-section h3{margin:0 0 5px}.settings-section>p{margin:0 0 15px;color:var(--muted);font-size:13px;line-height:1.55}.theme-row{display:flex;gap:10px}
+.theme-choice{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:11px;padding:11px 17px;font-weight:750}.theme-choice.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.school-current{padding:13px 14px;background:var(--soft);border:1px solid var(--line);border-radius:11px;margin-bottom:13px}.school-current b{display:block;margin-bottom:4px}.school-current small{color:var(--muted)}
+.school-search-row{display:grid;grid-template-columns:150px minmax(180px,1fr) auto;gap:8px}.school-results{width:100%;margin-top:10px;min-height:44px;border:1px solid var(--line);border-radius:9px;background:var(--panel);color:var(--text);padding:10px}
+.settings-pref-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.settings-actions{display:flex;justify-content:flex-end;gap:8px}
+.myschool-banner{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 17px;background:var(--panel);border:1px solid var(--line);border-radius:13px;margin-bottom:16px}.myschool-banner strong{display:block}.myschool-banner span{color:var(--muted);font-size:13px}
+.calendar-layout{display:grid;grid-template-columns:minmax(520px,1.2fr) minmax(340px,.8fr);gap:18px;align-items:start}.calendar-card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:18px}
+.calendar-week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}.calendar-week div{text-align:center;font-size:12px;color:var(--muted);font-weight:750;padding:5px}.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-day{min-height:91px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);padding:8px;text-align:left;position:relative}.cal-day.out{opacity:.25}.cal-day.has-meal{background:var(--soft)}.cal-day.selected{outline:2px solid #657285}
+.cal-day .daynum{font-weight:800}.cal-day .meal-dot{position:absolute;right:8px;top:9px;width:7px;height:7px;border-radius:99px;background:#738196}.cal-day .day-score{display:block;margin-top:17px;font-size:12px;font-weight:800;color:var(--muted)}
+.meal-detail{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:18px}.meal-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 14px}.meal-menu-list{line-height:1.8;color:var(--text);font-size:14px}
+.score-big{font-size:34px;font-weight:900}.score-caption{color:var(--muted);font-size:12px}.nutrition-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:13px 0}.nutrition-cell{padding:10px;border-radius:9px;background:var(--soft);text-align:center}.nutrition-cell b{display:block;font-size:16px}.nutrition-cell small{color:var(--muted)}
+.settings-link-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:17px}.settings-link-banner span{font-size:13px;color:var(--muted)}
+body[data-theme="dark"]{--bg:#0e1116;--panel:#171b22;--text:#edf1f7;--muted:#aeb8c6;--line:#343d4b;--dark:#e7ebf1;--soft:#202630;--accent:#a9b4c2;--danger:#ff938b;--hover:#222a35;--panel2:#1d232c;--chartText:#cbd5e1;--chartGrid:#334155;--tooltipBg:#f1f5f9;--tooltipText:#111827;--focus:#60a5fa;--tray-cell:#202630;--tray-empty:#1b212a;--tray-text:#edf1f7;--tray-label:#b7c1ce;--tray-stroke:#596575;--tray-steel1:#697482;--tray-steel2:#a9b1ba;--tray-steel3:#59636f;--tray-steel4:#858f9b}
+body[data-theme="dark"] header,body[data-theme="dark"] .home-card,body[data-theme="dark"] .controls,body[data-theme="dark"] .panel,body[data-theme="dark"] .tray-card,body[data-theme="dark"] .pref-box,body[data-theme="dark"] .stat,body[data-theme="dark"] .season-card,body[data-theme="dark"] .dropdown,body[data-theme="dark"] .dropdown button,body[data-theme="dark"] select,body[data-theme="dark"] input,body[data-theme="dark"] .tab-btn,body[data-theme="dark"] .chip-btn,body[data-theme="dark"] .ghost-btn,body[data-theme="dark"] .favorite,body[data-theme="dark"] .pref-item,body[data-theme="dark"] .metric-card{background:var(--panel);color:var(--text);border-color:var(--line)}
+body[data-theme="dark"] .nav-btn:hover,body[data-theme="dark"] .nav-btn.active,body[data-theme="dark"] .dropdown button:hover{background:#222832;color:#fff}body[data-theme="dark"] .primary{background:#e4e9ef;color:#111}body[data-theme="dark"] .primary:hover{background:#fff}body[data-theme="dark"] .theme-choice.active{background:#e5eaf0;color:#111}body[data-theme="dark"] .pref-item.active,body[data-theme="dark"] .favorite.active,body[data-theme="dark"] .chip-btn.active,body[data-theme="dark"] .tab-btn.active{background:#e2e7ed;color:#111;border-color:#e2e7ed}
+/* Dark-mode contrast fixes */
+body[data-theme="dark"] .nav-btn{color:#c2cad5}
+body[data-theme="dark"] .control label,
+body[data-theme="dark"] .panel .desc,
+body[data-theme="dark"] .tray-note,
+body[data-theme="dark"] .rank-text small,
+body[data-theme="dark"] .stat small,
+body[data-theme="dark"] footer{color:#aeb8c6}
+body[data-theme="dark"] .rank-item{background:#222832;color:#edf1f7}
+body[data-theme="dark"] .rank-item:hover{background:#2b333f}
+body[data-theme="dark"] .status{background:#1c2838;color:#d9e4f2;border:1px solid #33465f}
+body[data-theme="dark"] .status.error{background:#351f22;color:#ffb4ae;border-color:#653238}
+body[data-theme="dark"] .data-table th{background:#202630;color:#c4cedb}
+body[data-theme="dark"] .data-table td{color:#e6ebf1}
+.data-table tbody tr:hover{background:var(--hover)}
+body[data-theme="dark"] .data-table tbody tr:hover{background:#202833}
+body[data-theme="dark"] .notice{background:#302b1d;border-color:#5e5030;color:#f1dda6}
+body[data-theme="dark"] .loading-bar{background:#303846}
+body[data-theme="dark"] .cache-badge{background:#1f3427;color:#bce4c4}
+body[data-theme="dark"] select option{background:#171b22;color:#edf1f7}
+body[data-theme="dark"] input::placeholder{color:#778393}
+body[data-theme="dark"] input[type="date"],
+body[data-theme="dark"] input[type="month"]{color-scheme:dark}
+.api-key-row{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;gap:8px;align-items:center}
+.api-key-input{width:100%;border:1px solid var(--line);border-radius:9px;padding:11px 12px;background:var(--panel);color:var(--text)}
+.api-key-status{margin-top:9px;font-size:12px;line-height:1.55;color:var(--muted)}
+.api-key-status.ok{color:#3d7b4a}
+/* comparison charts / today's meal map */
+.map-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(330px,.55fr);gap:17px;align-items:start}
+.today-map{height:620px;border:1px solid var(--line);border-radius:15px;overflow:hidden;background:var(--soft);position:relative}
+.map-empty{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px;color:var(--muted);line-height:1.65}
+.map-ranking{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:18px;max-height:620px;overflow:auto}
+.map-ranking h3{margin:0 0 5px}.map-ranking>.desc{margin-bottom:12px}
+.map-rank-item{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:start;padding:12px 6px;border-bottom:1px solid var(--line);cursor:pointer}
+.map-rank-item:last-child{border-bottom:0}.map-rank-item:hover{background:var(--soft)}
+.map-rank-no{font-size:18px;font-weight:900;text-align:center;padding-top:2px}
+.map-rank-main b{display:block;margin-bottom:4px}.map-rank-main small{display:block;color:var(--muted);line-height:1.45}
+.map-rank-score{font-size:20px;font-weight:900}
+.score-marker{width:44px;height:44px;border:3px solid rgba(255,255,255,.96);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.28);cursor:pointer}
+.map-popup{min-width:220px;max-width:300px;padding:12px 13px;background:#fff;color:#161a22;border-radius:10px;box-shadow:0 8px 26px rgba(0,0,0,.22);border:1px solid #dfe4eb}
+.map-popup b{display:block;font-size:15px;margin-bottom:3px}.map-popup .map-score{font-size:22px;font-weight:900;margin:5px 0}.map-popup small{display:block;color:#667080;line-height:1.5}
+.map-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:12px}
+.map-legend span{display:inline-flex;align-items:center;gap:5px}.legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+body[data-theme="dark"] .map-ranking{background:var(--panel)}
+body[data-theme="dark"] .map-popup{background:#202630;color:#edf1f7;border-color:#445064}
+body[data-theme="dark"] .map-popup small{color:#b3bdca}
+@media(max-width:1000px){.map-layout{grid-template-columns:1fr}.today-map,.map-ranking{height:520px;max-height:none}}
+@media(max-width:720px){.today-map{height:430px}}
+
+body[data-theme="dark"] .api-key-status.ok{color:#9bd3a7}
+@media(max-width:720px){.api-key-row{grid-template-columns:1fr}}
+
+
+
+/* v8 design audit + comparison/search + local SVG map */
+button:focus-visible,select:focus-visible,input:focus-visible,.home-card:focus-visible,.cal-day:focus-visible{outline:3px solid color-mix(in srgb,var(--focus) 55%,transparent);outline-offset:2px}
+select:disabled,input:disabled,button:disabled{opacity:.58;cursor:not-allowed}
+body[data-theme="dark"] .home-card:hover{box-shadow:0 16px 40px rgba(0,0,0,.34);border-color:#465365}
+body[data-theme="dark"] .ghost-btn:hover{background:#26303c;border-color:#465365}
+body[data-theme="dark"] .tab-btn:not(.active):hover,body[data-theme="dark"] .chip-btn:not(.active):hover{background:#222a35}
+body[data-theme="dark"] .season-card.selected{outline-color:#93c5fd}
+body[data-theme="dark"] .cal-day.selected{outline-color:#93c5fd}
+body[data-theme="dark"] .settings-link-banner{background:#1d2632}
+body[data-theme="dark"] .school-current{background:#202630}
+body[data-theme="dark"] .nutrition-cell{background:#202630}
+body[data-theme="dark"] .cal-day.has-meal{background:#202630}
+body[data-theme="dark"] .map-rank-item:hover{background:#222a35}
+body[data-theme="dark"] .score-caption,body[data-theme="dark"] .calendar-week div,body[data-theme="dark"] .cal-day .day-score{color:#aeb8c6}
+body[data-theme="dark"] input:-webkit-autofill{-webkit-text-fill-color:#edf1f7;box-shadow:0 0 0 1000px #171b22 inset}
+.mode-switch{display:flex;gap:8px;flex-wrap:wrap}
+.compare-mode-panel{margin-top:14px}.compare-mode-panel.hidden,.hidden{display:none!important}
+.school-search-tools{display:grid;grid-template-columns:150px minmax(180px,1fr) auto;gap:8px;align-items:end}
+.school-search-results{display:grid;grid-template-columns:minmax(220px,1fr) auto;gap:8px;margin-top:9px}
+.selected-school-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;min-height:32px}
+.school-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:999px;padding:7px 10px;font-size:13px;font-weight:700}
+.school-chip button{border:0;background:transparent;color:var(--muted);padding:0;font-weight:900;line-height:1}
+.school-chip button:hover{color:var(--danger)}
+.selected-school-summary{color:var(--muted);font-size:12px;margin-top:8px}
+.season-mode-box{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.season-school-selected{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--text);font-weight:750;min-width:220px}
+.local-map-wrap{height:620px;border:1px solid var(--line);border-radius:15px;overflow:hidden;background:var(--panel2);position:relative}
+.local-map-svg{width:100%;height:100%;display:block}
+.map-region-shape{fill:var(--soft);stroke:var(--line);stroke-width:3}
+.map-area-label{fill:var(--muted);font-size:10px;text-anchor:middle;pointer-events:none}
+.map-school-marker{cursor:pointer;transition:.14s transform,.14s opacity;transform-box:fill-box;transform-origin:center}
+.map-school-marker:hover{transform:scale(1.12)}
+.map-school-marker.selected{filter:drop-shadow(0 0 7px rgba(255,255,255,.85))}
+.map-marker-circle{stroke:var(--panel);stroke-width:3}
+.map-marker-text{fill:#fff;font-size:10px;font-weight:900;text-anchor:middle;dominant-baseline:middle;pointer-events:none}
+.map-selected-card{border:1px solid var(--line);background:var(--panel2);border-radius:11px;padding:12px;margin-bottom:12px;min-height:92px}
+.map-selected-card b{display:block;margin-bottom:4px}.map-selected-card small{color:var(--muted);line-height:1.55}
+.map-map-note{font-size:12px;color:var(--muted);line-height:1.55;margin-top:8px}
+body[data-theme="dark"] .school-chip,body[data-theme="dark"] .season-school-selected,body[data-theme="dark"] .map-selected-card{background:#1d232c}
+@media(max-width:720px){.school-search-tools,.school-search-results{grid-template-columns:1fr}.local-map-wrap{height:430px}}
+
+/* v9 reliability / mobile navigation */
+.mobile-menu-btn{display:none}
+.partial-note{font-size:12px;color:var(--muted);margin:0 0 8px;line-height:1.5}
+.coverage-warning{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;background:#fff3cd;color:#765d00;font-size:11px;font-weight:800;margin-bottom:7px}
+body[data-theme="dark"] .coverage-warning{background:#3a321d;color:#f6d980}
+.chart-fallback{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);padding:20px;border:1px dashed var(--line);border-radius:10px}
+@media(max-width:720px){
+  header{position:sticky;flex-wrap:wrap;height:auto;min-height:64px;padding-top:8px;padding-bottom:8px}
+  .mobile-menu-btn{display:inline-flex}
+  header nav{display:none;position:absolute;left:10px;right:10px;top:64px;height:auto;flex-direction:column;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px;box-shadow:0 18px 45px rgba(0,0,0,.18)}
+  header nav.open{display:flex}
+  .nav-item{display:block}.nav-btn{height:auto;width:100%;text-align:left;padding:12px}
+  .nav-item .dropdown{position:static;display:block;min-width:0;box-shadow:none;border:0;padding:0 0 4px 12px;background:transparent}
+  .nav-item .dropdown button{background:transparent;padding:9px 11px}
+  .header-actions{margin-left:auto}
+}
+
+@media(max-width:1000px){.home-grid,.season-grid{grid-template-columns:repeat(2,1fr)}.pref-grid,.settings-pref-grid{grid-template-columns:repeat(3,1fr)}.stats{grid-template-columns:repeat(2,1fr)}.split-visual,.calendar-layout{grid-template-columns:1fr}}
+@media(max-width:720px){header{padding-left:14px;padding-right:14px}.logo{font-size:16px}main{padding:30px 15px 70px}.hero{padding:45px 10px}.hero h1{font-size:34px}.home-grid,.season-grid,.dashboard,.stats,.pref-grid,.settings-pref-grid,.metric-grid{grid-template-columns:1fr}.panel.full{grid-column:auto}.page-head{align-items:flex-start;flex-direction:column}.chart-box{height:250px}.school-search-row{grid-template-columns:1fr}.calendar-grid{gap:3px}.cal-day{min-height:76px;padding:6px}.nutrition-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo" onclick="goHome()">급식 데이터 분석</div>
+  <nav>
+    <div class="nav-item"><button class="nav-btn" onclick="goHome()">홈</button></div>
+    <div class="nav-item"><button class="nav-btn" onclick="openMySchool('compare')">우리학교 ▾</button><div class="dropdown"><button onclick="openMySchool('compare')">A. 우리학교 vs 학교 특성</button><button onclick="openMySchool('calendar')">B. 우리학교 급식 달력</button></div></div>
+    <div class="nav-item"><button class="nav-btn" onclick="openSchool('compare')">학교별 분석 ▾</button><div class="dropdown"><button onclick="openSchool('compare')">학교 특성 vs 학교 특성</button><button onclick="openSchool('all')">전체 학교 특성 비교</button>
+        <button onclick="openSchool('map')">오늘의 급식 지도</button></div></div>
+    <div class="nav-item"><button class="nav-btn" onclick="showPage('seasonPage')">계절별 분석</button></div>
+    <div class="nav-item"><button class="nav-btn" onclick="showPage('tastePage')">시간·요일 분석</button></div>
+  </nav>
+  <div class="header-actions"><button class="ghost-btn mobile-menu-btn" onclick="toggleMobileNav()" aria-label="메뉴 열기">☰ 메뉴</button><button class="ghost-btn" onclick="openSettings()">⚙ 설정</button></div>
+</header>
+
+<main>
+<section id="homePage" class="page active">
+  <div class="hero"><h1>학교 급식 데이터 분석</h1><p>학교 유형과 계절을 비교하고, 설정한 내 학교의 급식을 직접 확인합니다.<br>내 취향은 설정에 한 번 저장하면 급식 달력과 시간·요일 분석에 공통으로 적용됩니다.</p></div>
+  <div class="home-grid">
+    <article class="home-card" tabindex="0" role="button" onclick="openMySchool('compare')"><div class="home-icon">🎓</div><h2>우리학교 분석</h2><p>내 학교를 특정 지역·학교 유형 평균과 비교하거나, 달력에서 날짜를 눌러 실제 급식과 내 취향 적합도를 확인합니다.</p></article>
+    <article class="home-card" tabindex="0" role="button" onclick="openSchool('compare')"><div class="home-icon">🏫</div><h2>학교별 급식 분석</h2><p>일반고·자율고·특목고·특성화고·과학고·체고 등 학교 특성끼리 비교하고 전체 유형을 한눈에 살펴봅니다.</p></article>
+    <article class="home-card" tabindex="0" role="button" onclick="showPage('seasonPage')"><div class="home-icon">🌿</div><h2>계절별 메뉴 분석</h2><p>봄·여름·가을·겨울 TOP 3와 월간 등장 추세, 계절성이 잘 드러나는 실제 대표 급식판을 확인합니다.</p></article>
+    <article class="home-card" tabindex="0" role="button" onclick="showPage('tastePage')"><div class="home-icon">🍽️</div><h2>시간·요일 분석</h2><p>설정에 저장한 취향으로 월~금과 조·중·석식 적합도를 계산하고 학교 특성별 차이를 봅니다.</p></article>
+  </div>
+</section>
+
+<section id="mySchoolPage" class="page">
+  <div class="page-head"><div><h1>우리학교</h1><p>설정에 저장한 내 학교를 기준으로 비교하거나 월간 급식을 확인합니다.</p></div><div class="subtabs"><button id="mySchoolTabCompare" class="tab-btn active" onclick="setMySchoolSubpage('compare')">A. 우리학교 vs 학교 특성</button><button id="mySchoolTabCalendar" class="tab-btn" onclick="setMySchoolSubpage('calendar')">B. 급식 달력</button></div></div>
+  <div id="mySchoolCompare" class="subpage active">
+    <div id="mySchoolCompareBanner" class="myschool-banner"></div>
+    <div class="controls"><div class="controls-title"><h3>비교 기간</h3><small>내 학교와 학교 집단 평균 또는 여러 개 개별 학교 비교</small></div><div class="control-row"><div class="control"><label>시작일</label><input id="myCompFrom" type="date"></div><div class="control"><label>종료일</label><input id="myCompTo" type="date"></div><div class="control"><label>식사</label><select id="myCompMeal"><option value="2">중식</option><option value="1">조식</option><option value="3">석식</option><option value="">전체</option></select></div></div></div>
+    <div class="controls">
+      <div class="controls-title"><h3>비교 방식</h3><small>학교 집단 평균 또는 여러 개 개별 학교와 동시에 비교</small></div>
+      <div class="mode-switch"><button id="myModeGroupBtn" class="tab-btn active" onclick="setMyCompareMode('group')">학교 특성과 비교</button><button id="myModeSchoolsBtn" class="tab-btn" onclick="setMyCompareMode('schools')">개별 학교 여러 개와 비교</button></div>
+      <div id="myCompareGroupControls" class="compare-mode-panel">
+        <div class="control-row"><div class="control"><label>지역</label><select id="myCompRegion"></select></div><div class="control"><label>교육지원청</label><select id="myCompSupport"></select></div><div class="control"><label>학교 유형</label><select id="myCompType"></select></div><div class="control"><label>성별</label><select id="myCompGender"></select></div></div>
+      </div>
+      <div id="myCompareSchoolControls" class="compare-mode-panel hidden">
+        <div class="school-search-tools"><div class="control"><label>검색 지역</label><select id="mySchoolSearchRegion"></select></div><div class="control"><label>학교명</label><input id="mySchoolSearchQuery" type="text" placeholder="예: 세화고, 한대부고"></div><button class="ghost-btn" onclick="searchMyCompareSchools()">학교 검색</button></div>
+        <div class="school-search-results"><select id="mySchoolSearchResults"><option value="">검색 결과</option></select><button class="ghost-btn" onclick="addMyCompareSchool()">선택 학교 추가</button></div>
+        <div id="mySelectedSchools" class="selected-school-list"></div><div class="selected-school-summary">내 학교 외 최대 5개 학교를 동시에 비교할 수 있습니다.</div>
+      </div>
+      <div style="margin-top:14px"><button class="primary" onclick="runMySchoolCompare()">비교 분석</button></div>
+    </div>
+    <div id="myCompStatus" class="status"><div id="myCompStatusText"></div><div class="loading-bar"><div id="myCompProgress"></div></div></div>
+    <div class="stats"><div class="stat"><small>내 학교</small><strong id="myCompSchoolName">-</strong></div><div class="stat"><small>비교 대상 수</small><strong id="myCompTargetCount">-</strong></div><div class="stat"><small>내 학교 급식 건수</small><strong id="myCompOwnMeals">-</strong></div><div class="stat"><small>비교 대상 급식 건수</small><strong id="myCompGroupMeals">-</strong></div></div>
+    <div class="dashboard"><div class="panel full"><h3>월별 평균 칼로리</h3><div class="chart-box"><canvas id="myCompCalChart"></canvas></div></div><div class="panel"><h3>월별 평균 단백질</h3><div class="chart-box"><canvas id="myCompProteinChart"></canvas></div></div><div class="panel"><h3>육류 메뉴 항목 비율</h3><div class="chart-box"><canvas id="myCompMeatChart"></canvas></div></div><div class="panel full"><h3>채소 메뉴 항목 비율</h3><div class="chart-box"><canvas id="myCompVegChart"></canvas></div></div></div>
+  </div>
+  <div id="mySchoolCalendar" class="subpage">
+    <div id="mySchoolCalendarBanner" class="myschool-banner"></div>
+    <div class="controls"><div class="control-row"><div class="control"><label>월 선택</label><input id="calendarMonth" type="month"></div><button class="primary" onclick="loadMySchoolCalendar()">급식 달력 불러오기</button></div></div>
+    <div id="calendarStatus" class="status"><div id="calendarStatusText"></div><div class="loading-bar"><div id="calendarProgress"></div></div></div>
+    <div class="calendar-layout"><div class="calendar-card"><div class="calendar-week"><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div><div>일</div></div><div id="mealCalendar" class="calendar-grid"></div></div>
+    <div class="meal-detail"><h3 id="calendarDetailTitle">날짜를 선택하세요</h3><div id="calendarMealTabs" class="meal-tabs"></div><div style="display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:10px"><div><div id="calendarScore" class="score-big">-</div><div class="score-caption">내 취향 적합도 / 100</div></div><button class="ghost-btn" onclick="openSettings('preferences')">취향 수정</button></div><div id="calendarNutrition" class="nutrition-row"></div><div id="calendarTray" class="tray-wrap"></div><div id="calendarMenus" class="meal-menu-list"></div></div></div>
+  </div>
+</section>
+<section id="schoolPage" class="page">
+  <div class="page-head">
+    <div><h1>학교별 급식 분석</h1><p>선택 지역에서 조건에 맞는 고등학교 전체를 대상으로 계산합니다.</p></div>
+    <div class="subtabs">
+      <button id="schoolTabCompare" class="tab-btn active" onclick="setSchoolSubpage('compare')">학교 특성 vs 학교 특성</button>
+      <button id="schoolTabAll" class="tab-btn" onclick="setSchoolSubpage('all')">전체 학교 특성 비교</button>
+      <button id="schoolTabMap" class="tab-btn" onclick="setSchoolSubpage('map')">오늘의 급식 지도</button>
+    </div>
+  </div>
+
+  <div id="schoolCompare" class="subpage active">
+    <div class="controls">
+      <div class="controls-title"><h3>① 분석 범위</h3><small>서울·경기는 교육지원청 단위로 추가 필터 가능</small></div>
+      <div class="control-row">
+        <div class="control"><label>지역</label><select id="scRegion"></select></div>
+        <div class="control"><label>교육지원청</label><select id="scSupport"></select></div>
+        <div class="control"><label>시작일</label><input id="scFrom" type="date"></div>
+        <div class="control"><label>종료일</label><input id="scTo" type="date"></div>
+        <div class="control"><label>식사</label><select id="scMeal"><option value="2">중식</option><option value="1">조식</option><option value="3">석식</option><option value="">전체</option></select></div>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="controls-title"><h3>② 학교 분류</h3><span class="cache-badge">지역 원본 데이터 캐시 재사용</span></div>
+      <div class="control-row">
+        <div class="control"><label>학교 그룹 A</label><select id="scTypeA"></select></div>
+        <div class="control"><label>A 성별</label><select id="scGenderA"></select></div>
+        <div class="control"><label>학교 그룹 B</label><select id="scTypeB"></select></div>
+        <div class="control"><label>B 성별</label><select id="scGenderB"></select></div>
+        <button class="primary" onclick="runSchoolCompare()">분석</button>
+      </div>
+    </div>
+    <div id="scStatus" class="status"><div id="scStatusText"></div><div class="loading-bar"><div id="scProgress"></div></div></div>
+    <div class="stats">
+      <div class="stat"><small>A 분석 학교</small><strong id="scCountA">-</strong></div>
+      <div class="stat"><small>B 분석 학교</small><strong id="scCountB">-</strong></div>
+      <div class="stat"><small>A 급식 건수</small><strong id="scMealsA">-</strong></div>
+      <div class="stat"><small>B 급식 건수</small><strong id="scMealsB">-</strong></div>
+    </div>
+    <div class="dashboard">
+      <div class="panel full"><h3>기간별 평균 칼로리</h3><div class="desc">선택 기간을 월 단위로 묶어 급식 1회당 평균 열량을 비교합니다.</div><div class="chart-box"><canvas id="scCalChart"></canvas></div></div>
+      <div class="panel"><h3>평균 단백질</h3><div class="chart-box"><canvas id="scProteinChart"></canvas></div></div>
+      <div class="panel"><h3>육류 메뉴 항목 비율</h3><div class="chart-box"><canvas id="scMeatChart"></canvas></div></div>
+      <div class="panel full"><h3>채소 메뉴 항목 비율</h3><div class="desc">실제 식재료 중량이 아니라 메뉴명 분류 기준입니다.</div><div class="chart-box"><canvas id="scVegChart"></canvas></div></div>
+    </div>
+  </div>
+
+  <div id="schoolAll" class="subpage">
+    <div class="controls">
+      <div class="control-row">
+        <div class="control"><label>지역</label><select id="saRegion"></select></div>
+        <div class="control"><label>교육지원청</label><select id="saSupport"></select></div>
+        <div class="control"><label>시작일</label><input id="saFrom" type="date"></div>
+        <div class="control"><label>종료일</label><input id="saTo" type="date"></div>
+        <div class="control"><label>식사</label><select id="saMeal"><option value="2">중식</option><option value="1">조식</option><option value="3">석식</option><option value="">전체</option></select></div>
+        <button class="primary" onclick="runSchoolAll()">전체 분석</button>
+      </div>
+    </div>
+    <div id="saStatus" class="status"><div id="saStatusText"></div><div class="loading-bar"><div id="saProgress"></div></div></div>
+    <div class="dashboard">
+      <div class="panel full"><h3>학교 유형별 평균 칼로리</h3><div class="chart-box"><canvas id="saCalChart"></canvas></div></div>
+      <div class="panel"><h3>학교 유형별 평균 단백질</h3><div class="chart-box"><canvas id="saProteinChart"></canvas></div></div>
+      <div class="panel"><h3>육류 / 채소 메뉴 비율</h3><div class="chart-box"><canvas id="saMenuChart"></canvas></div></div>
+      <div class="panel full"><h3>유형별 상세값</h3><div style="overflow:auto"><table id="saTable" class="data-table"></table></div></div>
+    </div>
+  </div>
+
+  <div id="schoolMap" class="subpage">
+    <div class="controls">
+      <div class="controls-title"><h3>오늘의 급식 지도</h3><small>설정에 저장된 내 취향으로 오늘 급식을 0~100점으로 계산</small></div>
+      <div class="control-row">
+        <div class="control"><label>지역</label><select id="mapRegion"></select></div>
+        <div class="control"><label>교육지원청</label><select id="mapSupport"></select></div>
+        <div class="control"><label>학교 유형</label><select id="mapType"></select></div>
+        <div class="control"><label>성별</label><select id="mapGender"></select></div>
+        <div class="control"><label>식사</label><select id="mapMeal"><option value="2">중식</option><option value="1">조식</option><option value="3">석식</option></select></div>
+        <div class="control"><label>지도 표시</label><select id="mapLimit"><option value="30">상위 30개교</option><option value="50" selected>상위 50개교</option><option value="100">상위 100개교</option><option value="ALL">전체</option></select></div>
+        <button class="primary" onclick="runTodayMealMap()">오늘 급식 분석</button>
+      </div>
+    </div>
+    <div class="settings-link-banner"><span>지도 API를 사용하지 않습니다. 학교 도로명주소의 <b>구/시·군</b>을 읽어 자체 SVG 분석 지도에 배치합니다. 따라서 마커는 정확한 교문 좌표가 아니라 지역 내 상대 위치입니다.</span><button class="ghost-btn" onclick="openSettings('preferences')">취향 설정</button></div>
+    <div id="mapStatus" class="status"><div id="mapStatusText"></div><div class="loading-bar"><div id="mapProgress"></div></div></div>
+    <div class="stats">
+      <div class="stat"><small>오늘 날짜</small><strong id="mapDate">-</strong></div>
+      <div class="stat"><small>급식 있는 학교</small><strong id="mapMealSchoolCount">-</strong></div>
+      <div class="stat"><small>지도 표시 학교</small><strong id="mapShownCount">-</strong></div>
+      <div class="stat"><small>나와 가장 잘 맞는 학교</small><strong id="mapBestSchool">-</strong></div>
+    </div>
+    <div class="map-layout">
+      <div>
+        <div id="todayMap" class="local-map-wrap"><div class="map-empty">‘오늘 급식 분석’을 누르면 학교별 취향 점수를 자체 SVG 지도에 표시합니다.</div></div>
+        <div class="map-legend">
+          <span><i class="legend-dot" style="background:#16a34a"></i>80~100</span>
+          <span><i class="legend-dot" style="background:#2563eb"></i>60~79</span>
+          <span><i class="legend-dot" style="background:#f59e0b"></i>40~59</span>
+          <span><i class="legend-dot" style="background:#64748b"></i>0~39</span>
+        </div>
+      </div>
+      <div id="mapRanking" class="map-ranking">
+        <h3>오늘 나와 잘 맞는 학교</h3>
+        <div class="desc">급식이 있는 학교를 취향 적합도 순으로 정렬합니다.</div><div id="mapSelectionDetail" class="map-selected-card"><b>학교를 선택하세요</b><small>지도 마커나 순위를 누르면 메뉴를 확인할 수 있습니다.</small></div>
+        <div id="mapRankingList">분석 전</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<section id="seasonPage" class="page">
+  <div class="page-head">
+    <div><h1>계절별 메뉴 분석</h1><p>네 계절을 동시에 비교하고, 메뉴를 클릭해 월별 추세와 대표 급식판을 확인합니다.</p></div>
+  </div>
+  <div class="controls">
+    <div class="controls-title"><h3>분석 대상</h3><small>지역 전체 또는 특정 학교 1개를 선택</small></div>
+    <div class="season-mode-box"><button id="seasonModeRegionBtn" class="tab-btn active" onclick="setSeasonMode('region')">지역 전체</button><button id="seasonModeSchoolBtn" class="tab-btn" onclick="setSeasonMode('school')">특정 학교</button></div>
+    <div id="seasonRegionControls" class="compare-mode-panel"><div class="control-row"><div class="control"><label>지역</label><select id="seasonRegion"></select></div><div class="control"><label>교육지원청</label><select id="seasonSupport"></select></div></div></div>
+    <div id="seasonSchoolControls" class="compare-mode-panel hidden">
+      <div class="school-search-tools"><div class="control"><label>검색 지역</label><select id="seasonSchoolSearchRegion"></select></div><div class="control"><label>학교명</label><input id="seasonSchoolSearchQuery" type="text" placeholder="학교명을 입력하세요"></div><button class="ghost-btn" onclick="searchSeasonSchools()">학교 검색</button></div>
+      <div class="school-search-results"><select id="seasonSchoolSearchResults"><option value="">검색 결과</option></select><button class="ghost-btn" onclick="selectSeasonSchool()">이 학교 선택</button></div>
+      <div id="seasonSelectedSchool" class="season-school-selected" style="margin-top:10px">선택된 학교 없음</div>
+    </div>
+    <div class="control-row" style="margin-top:14px"><div class="control"><label>연도</label><select id="seasonYear"></select></div><div class="control"><label>식사</label><select id="seasonMeal"><option value="2">중식</option><option value="1">조식</option><option value="3">석식</option><option value="">전체</option></select></div><button class="primary" onclick="runSeasonAnalysis()">4계절 분석</button></div>
+  </div>
+  <div id="seasonStatus" class="status"><div id="seasonStatusText"></div><div class="loading-bar"><div id="seasonProgress"></div></div></div>
+
+  <div id="seasonGrid" class="season-grid">
+    <div class="season-card" data-season="봄"><h3>🌱 봄 TOP 3</h3><div class="seasonRanks">분석 전</div></div>
+    <div class="season-card" data-season="여름"><h3>☀️ 여름 TOP 3</h3><div class="seasonRanks">분석 전</div></div>
+    <div class="season-card" data-season="가을"><h3>🍂 가을 TOP 3</h3><div class="seasonRanks">분석 전</div></div>
+    <div class="season-card" data-season="겨울"><h3>❄️ 겨울 TOP 3</h3><div class="seasonRanks">분석 전</div></div>
+  </div>
+
+  <div class="split-visual">
+    <div class="panel">
+      <h3 id="seasonDetailTitle">메뉴를 선택하세요</h3>
+      <div class="desc">선택한 분석 대상의 월별 등장 추세를 꺾은선그래프로 표시합니다.</div>
+      <div class="chart-box"><canvas id="seasonTrendChart"></canvas></div>
+    </div>
+    <div class="tray-card">
+      <h3 id="seasonTrayTitle">계절 대표 급식판</h3>
+      <div id="seasonTrayNote" class="tray-note">실제 급식 중 계절 특성이 잘 드러나는 한 끼를 선택해 표시합니다.</div>
+      <div id="seasonTray" class="tray-wrap"></div>
+    </div>
+  </div>
+</section>
+
+<section id="tastePage" class="page">
+  <div class="page-head">
+    <div><h1>시간·요일 / 나의 취향 분석</h1><p>설정에 저장한 내 취향을 기준으로 급식의 취향 적합도를 계산합니다.</p></div>
+  </div>
+  <div class="settings-link-banner"><span>이 페이지는 <b>설정에 저장된 내 취향</b>을 사용합니다. 음식 종류와 선호 메뉴는 설정에서 변경합니다.</span><button class="ghost-btn" onclick="openSettings('preferences')">취향 설정</button></div>
+  <div class="controls">
+    <div class="controls-title"><h3>분석 대상 학교</h3><small>학교 유형과 남고·여고·공학을 독립적으로 선택</small></div>
+    <div class="control-row">
+      <div class="control"><label>지역</label><select id="tasteRegion"></select></div>
+      <div class="control"><label>교육지원청</label><select id="tasteSupport"></select></div>
+      <div class="control"><label>시작일</label><input id="tasteFrom" type="date"></div>
+      <div class="control"><label>종료일</label><input id="tasteTo" type="date"></div>
+      <div class="control"><label>학교 유형</label><select id="tasteType"></select></div>
+      <div class="control"><label>성별</label><select id="tasteGender"></select></div>
+      <button class="primary" onclick="runTasteAnalysis()">내 취향으로 분석</button>
+    </div>
+  </div>
+  <div id="tasteStatus" class="status"><div id="tasteStatusText"></div><div class="loading-bar"><div id="tasteProgress"></div></div></div>
+
+  <div class="dashboard">
+    <div class="panel">
+      <h3>요일별 취향 적합도</h3>
+      <div class="desc">막대 또는 아래 버튼을 클릭하면 해당 요일에서 어떤 학교 특성이 높은지 분석합니다.</div>
+      <div class="chart-box"><canvas id="tasteWeekChart"></canvas></div>
+      <div id="weekdayButtons" class="selector-row"></div>
+    </div>
+    <div class="panel">
+      <h3>조식·중식·석식 취향 적합도</h3>
+      <div class="desc">식사시간 버튼을 클릭하면 학교 특성별 차이를 확인합니다.</div>
+      <div class="chart-box"><canvas id="tasteMealChart"></canvas></div>
+      <div id="mealButtons" class="selector-row"></div>
+    </div>
+    <div class="panel">
+      <div class="drill-title"><div><h3 id="drillTitle">학교 특성별 취향 적합도</h3><div class="desc">요일 또는 식사시간을 선택하세요.</div></div></div>
+      <div class="chart-box"><canvas id="traitChart"></canvas></div>
+    </div>
+    <div class="tray-card">
+      <h3 id="tasteTrayTitle">취향 적합 대표 급식판</h3>
+      <div id="tasteTrayNote" class="tray-note">요일 또는 식사시간을 선택하면 실제 급식 중 사용자 취향에 잘 맞으면서 해당 조건에서 비교적 대표적인 한 끼를 표시합니다.</div>
+      <div id="tasteTray" class="tray-wrap"></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<div id="settingsBackdrop" class="settings-backdrop" onclick="if(event.target===this)closeSettings()"><div class="settings-modal"><div class="settings-head"><h2>설정</h2><button class="ghost-btn" onclick="closeSettings()">닫기</button></div><div class="settings-body">
+<section id="settingsAppearance" class="settings-section"><h3>화면</h3><p>라이트/다크 설정은 이 브라우저에 저장됩니다.</p><div class="theme-row"><button id="themeLightBtn" class="theme-choice" onclick="setTheme('light')">☀ 라이트</button><button id="themeDarkBtn" class="theme-choice" onclick="setTheme('dark')">☾ 다크</button></div></section>
+<section id="settingsApi" class="settings-section">
+  <h3>NEIS API 키</h3>
+  <p>코드에 API 키가 지정되어 있으면 그 키를 우선 사용합니다. 코드 키가 비어 있을 때만 아래에 저장한 키를 사용합니다.</p>
+  <div class="api-key-row">
+    <input id="settingsApiKeyInput" class="api-key-input" type="password" autocomplete="off" placeholder="NEIS API 키 입력">
+    <button class="primary" onclick="saveSettingsApiKey()">저장</button>
+    <button class="ghost-btn" onclick="clearSettingsApiKey()">저장 키 삭제</button>
+  </div>
+  <div id="settingsApiKeyStatus" class="api-key-status"></div>
+</section>
+<section id="settingsSchool" class="settings-section"><h3>내 학교</h3><p>지역을 고르고 학교명을 검색한 뒤 정확한 학교를 저장하세요.</p><div id="settingsCurrentSchool" class="school-current"></div><div class="school-search-row"><select id="settingsSchoolRegion"></select><input id="settingsSchoolQuery" type="text" placeholder="학교명 입력 (예: 대광고)"><button class="primary" onclick="searchMySchool()">검색</button></div><select id="settingsSchoolResults" class="school-results"><option value="">검색 결과가 여기에 표시됩니다.</option></select><div class="settings-actions" style="margin-top:10px"><button class="primary" onclick="saveSelectedMySchool()">선택한 학교 저장</button></div></section>
+<section id="settingsPreferences" class="settings-section"><h3>내 급식 취향</h3><p>급식 달력과 시간·요일 분석에 공통으로 사용합니다.</p><div id="prefGrid" class="settings-pref-grid"></div><div style="margin-top:17px;font-weight:800">특히 좋아하는 메뉴</div><div id="favoriteList" class="favorite-list"></div><div class="settings-actions" style="margin-top:12px"><button class="ghost-btn" onclick="resetPreferences()">취향 초기화</button></div></section>
+<section class="settings-section"><h3>데이터</h3><p>저장된 API 응답과 지역 원본 캐시를 삭제합니다.</p><button class="ghost-btn" onclick="clearApiCache()">API·지역 캐시 삭제</button></section>
+</div></div></div>
+<footer>
+  데이터 출처: 나이스 교육정보 개방 포털. 내 학교·화면 테마·취향·설정형 API 키는 이 브라우저에만 저장됩니다. 서울·경기 교육지원청 구분은 학교 주소를 이용한 보조 매핑을 포함합니다. 오늘 급식 지도는 주소의 구/시·군 단위 상대 위치를 이용한 분석용 SVG 지도이며 정확한 캠퍼스 좌표가 아닙니다. 현재 날짜가 포함된 급식 캐시는 짧게 유지하고 과거 데이터만 장기 보관합니다. 육류·채소·취향 분류는 이 프로그램의 메뉴명 규칙 기반 분석이며 식재료 중량이나 실제 학생 만족도와 동일하지 않습니다.
+</footer>
+
+<script>
+/* =========================================================
+   0. 사용 전 딱 한 곳만 수정
+   ========================================================= */
+const NEIS_API_KEY = "여기에_발급받은_NEIS_API_KEY를_입력하세요";
+
+/* API 및 처리 설정 */
+const API_ROOT = "https://open.neis.go.kr/hub";
+const PAGE_SIZE = 1000;
+const CONCURRENCY = 8;
+const CACHE_DB = "SchoolMealAnalyzer";
+const CACHE_STORE = "responses";
+const PREF_KEY = "meal_analyzer_preferences_v1";
+const THEME_KEY = "meal_analyzer_theme_v1";
+const MY_SCHOOL_KEY = "meal_analyzer_my_school_v1";
+const API_KEY_STORAGE_KEY = "meal_analyzer_neis_api_key_v1";
+const REGION_BUNDLE_MANIFEST_KEY = "meal_region_bundle_manifest_v1";
+
+const OFFICE_CODES = {
+  "서울":"B10","부산":"C10","대구":"D10","인천":"E10","광주":"F10","대전":"G10","울산":"H10",
+  "세종":"I10","경기":"J10","강원":"K10","충북":"M10","충남":"N10","전북":"P10","전남":"Q10",
+  "경북":"R10","경남":"S10","제주":"T10"
+};
+
+/* 고등학교의 JU_ORG_NM이 시도교육청 자체로 표시되는 경우가 있어 주소를 함께 사용한다. */
+const SEOUL_SUPPORT_MAP = {
+  "동부교육지원청":["동대문구","중랑구"],
+  "서부교육지원청":["서대문구","마포구","은평구"],
+  "남부교육지원청":["영등포구","구로구","금천구"],
+  "북부교육지원청":["노원구","도봉구"],
+  "중부교육지원청":["종로구","중구","용산구"],
+  "강동송파교육지원청":["강동구","송파구"],
+  "강서양천교육지원청":["강서구","양천구"],
+  "강남서초교육지원청":["강남구","서초구"],
+  "동작관악교육지원청":["동작구","관악구"],
+  "성동광진교육지원청":["성동구","광진구"],
+  "성북강북교육지원청":["성북구","강북구"]
+};
+const GYEONGGI_SUPPORT_MAP = {
+  "수원교육지원청":["수원시"],"성남교육지원청":["성남시"],"안양과천교육지원청":["안양시","과천시"],
+  "부천교육지원청":["부천시"],"광명교육지원청":["광명시"],"안산교육지원청":["안산시"],
+  "평택교육지원청":["평택시"],"군포의왕교육지원청":["군포시","의왕시"],"여주교육지원청":["여주시"],
+  "화성오산교육지원청":["화성시","오산시"],"광주하남교육지원청":["광주시","하남시"],
+  "양평교육지원청":["양평군"],"이천교육지원청":["이천시"],"용인교육지원청":["용인시"],
+  "안성교육지원청":["안성시"],"김포교육지원청":["김포시"],"시흥교육지원청":["시흥시"],
+  "의정부교육지원청":["의정부시"],"동두천양주교육지원청":["동두천시","양주시"],
+  "고양교육지원청":["고양시"],"구리남양주교육지원청":["구리시","남양주시"],
+  "파주교육지원청":["파주시"],"연천교육지원청":["연천군"],"포천교육지원청":["포천시"],
+  "가평교육지원청":["가평군"]
+};
+
+const GROUP_OPTIONS = [
+  ["ALL","전체 고등학교"],["일반고","일반고"],["자사고","자사고(자율고·사립 기준)"],["자율고","자율고(자사고 포함)"],
+  ["특성화고","특성화고"],["특목고","특목고 전체"],["과학고","과학고"],["외고","외국어고"],
+  ["국제고","국제고"],["체고","체육고"],["예고","예술고"],["마이스터고","마이스터고"],["기타","기타"]
+];
+const GENDER_OPTIONS = [["ALL","전체"],["남","남고"],["여","여고"],["남여공학","공학"]];
+
+const PREF_CATEGORIES = [
+  {id:"grill",name:"구이·직화",desc:"구이, 직화, 바비큐",words:["구이","직화","바베큐","바비큐","숯불","스테이크"]},
+  {id:"meat",name:"고기류",desc:"불고기, 갈비, 수육 등",words:["불고기","갈비","삼겹","수육","보쌈","제육","돈육","돼지","쇠고기","소고기","한우","닭갈비","오리"]},
+  {id:"fried",name:"튀김류",desc:"치킨, 돈가스, 튀김",words:["튀김","치킨","돈까스","돈가스","탕수육","커틀렛","가라아게"]},
+  {id:"western",name:"양식·치즈",desc:"피자, 파스타, 치즈",words:["피자","파스타","스파게티","치즈","그라탕","리조또","햄버거"]},
+  {id:"noodle",name:"면류",desc:"국수, 우동, 냉면",words:["국수","우동","냉면","라면","라멘","쫄면","짜장면","짬뽕","소바","면"]},
+  {id:"spicy",name:"매운 음식",desc:"떡볶이, 닭갈비, 매콤",words:["떡볶이","닭갈비","제육","매운","매콤","불닭","낙지볶음","주꾸미볶음"]},
+  {id:"seafood",name:"해산물",desc:"생선, 새우, 오징어",words:["생선","고등어","연어","삼치","갈치","새우","오징어","낙지","주꾸미","조개"]},
+  {id:"rice",name:"밥·덮밥",desc:"볶음밥, 비빔밥, 덮밥",words:["볶음밥","비빔밥","덮밥","오므라이스","카레라이스","김밥"]},
+  {id:"dessert",name:"디저트",desc:"케이크, 아이스크림, 빵",words:["케이크","아이스크림","쿠키","초코","빵","도넛","와플","푸딩","젤리"]},
+  {id:"fruit",name:"과일",desc:"수박, 딸기, 포도 등",words:["수박","딸기","포도","귤","감귤","사과","배","복숭아","멜론","바나나","키위","파인애플"]}
+];
+
+const FAVORITES = [
+  "삼겹살","수육","불고기","갈비","제육볶음","닭갈비","치킨","돈가스","피자","파스타",
+  "떡볶이","햄버거","스테이크","탕수육","냉면","볶음밥","비빔밥","아이스크림","케이크","수박"
+];
+
+const MEAT_WORDS = ["쇠고기","소고기","한우","불고기","돼지","돈육","제육","삼겹","목살","갈비","닭","치킨","오리","햄","소시지","베이컨","돈가스","돈까스","떡갈비","미트볼","수육","보쌈","스테이크"];
+const VEG_WORDS = ["나물","샐러드","무침","겉절이","시금치","콩나물","숙주","상추","양상추","배추","양배추","브로콜리","오이","가지","애호박","호박","버섯","도라지","미나리","부추","깻잎","파프리카","채소","야채"];
+const DESSERT_WORDS = ["사과","배","딸기","수박","참외","포도","귤","감귤","오렌지","바나나","키위","복숭아","파인애플","멜론","요거트","요구르트","케이크","쿠키","초코","아이스크림","주스","에이드","젤리","푸딩","빵"];
+const RICE_RE = /(밥|덮밥|볶음밥|비빔밥|오므라이스|카레라이스|김밥)/;
+const SOUP_RE = /(국|찌개|전골|스프|수프|곰탕|설렁탕|육개장|감자탕|갈비탕|삼계탕|매운탕|추어탕|도가니탕|순대국|국밥)$/;
+const KIMCHI_RE = /(김치|깍두기|단무지|피클|석박지)/;
+const MAIN_RE = /(불고기|갈비|제육|삼겹|수육|보쌈|닭|치킨|오리|스테이크|돈까스|돈가스|탕수육|생선|고등어|삼치|연어|새우|오징어|떡갈비|미트볼|피자|파스타|떡볶이|함박|구이|철판)/;
+function isSoupMenu(m){return SOUP_RE.test(m)&&!/(국수|탕수육|탕평채|국화|국화빵)/.test(m)}
+
+const charts = {};
+let seasonState = null;
+let tasteState = null;
+
+/* 명시적 DOM 참조: 브라우저의 id→전역변수 암묵 동작에 의존하지 않음 */
+const scRegion=document.getElementById("scRegion"), scFrom=document.getElementById("scFrom"), scTo=document.getElementById("scTo"), scMeal=document.getElementById("scMeal"), scTypeA=document.getElementById("scTypeA"), scGenderA=document.getElementById("scGenderA"), scTypeB=document.getElementById("scTypeB"), scGenderB=document.getElementById("scGenderB"), scCountA=document.getElementById("scCountA"), scCountB=document.getElementById("scCountB"), scMealsA=document.getElementById("scMealsA"), scMealsB=document.getElementById("scMealsB");
+const saRegion=document.getElementById("saRegion"), saFrom=document.getElementById("saFrom"), saTo=document.getElementById("saTo"), saMeal=document.getElementById("saMeal"), saTable=document.getElementById("saTable");
+const seasonRegion=document.getElementById("seasonRegion"), seasonYear=document.getElementById("seasonYear"), seasonMeal=document.getElementById("seasonMeal"), seasonDetailTitle=document.getElementById("seasonDetailTitle"), seasonTrayTitle=document.getElementById("seasonTrayTitle"), seasonTrayNote=document.getElementById("seasonTrayNote");
+const tasteRegion=document.getElementById("tasteRegion"), tasteFrom=document.getElementById("tasteFrom"), tasteTo=document.getElementById("tasteTo"), prefGrid=document.getElementById("prefGrid"), favoriteList=document.getElementById("favoriteList"), weekdayButtons=document.getElementById("weekdayButtons"), mealButtons=document.getElementById("mealButtons"), drillTitle=document.getElementById("drillTitle"), tasteTrayTitle=document.getElementById("tasteTrayTitle"), tasteTrayNote=document.getElementById("tasteTrayNote");
+
+/* =========================================================
+   1. 초기화 / UI
+   ========================================================= */
+document.addEventListener("DOMContentLoaded", () => {
+  bindNamedElements();
+  applySavedTheme();
+  initSelectors();
+  initDates();
+  initPreferences();
+  initMySchoolUI();
+  renderEmptyTray("seasonTray");
+  renderEmptyTray("tasteTray",true);
+  renderEmptyTray("calendarTray",true);
+  renderMySchoolBanners();
+  setupAccessibleCards();
+  cleanupLegacyDatabases();
+  if (!window.Chart) showChartLibraryWarning();
+  if (!apiKeyReady()) setTimeout(()=>openSettings("api"),120);
+});
+
+
+function bindNamedElements(){
+  document.querySelectorAll("[id]").forEach(el=>{ if(!(el.id in window)) window[el.id]=el; });
+}
+
+function hardcodedApiKey(){
+  const key=String(NEIS_API_KEY||"").trim();
+  if(!key || key.includes("여기에_") || key==="YOUR_API_KEY" || key==="API_KEY") return "";
+  return key;
+}
+function storedApiKey(){
+  return String(localStorage.getItem(API_KEY_STORAGE_KEY)||"").trim();
+}
+function getApiKey(){
+  return hardcodedApiKey() || storedApiKey();
+}
+function apiKeyReady(){
+  return getApiKey().length > 8;
+}
+function refreshApiKeySetting(){
+  const input=document.getElementById("settingsApiKeyInput");
+  const status=document.getElementById("settingsApiKeyStatus");
+  if(!input||!status)return;
+  const codeKey=hardcodedApiKey(),saved=storedApiKey();
+  input.value="";
+  if(codeKey){
+    input.disabled=true;
+    input.placeholder="코드에 지정된 API 키를 사용 중";
+    status.className="api-key-status ok";
+    status.textContent="코드에 지정된 API 키를 우선 사용 중입니다. 설정에 저장된 키가 있어도 사용하지 않습니다.";
+  }else{
+    input.disabled=false;
+    input.placeholder=saved?"저장된 키가 있음 · 변경하려면 새 키 입력":"NEIS API 키 입력";
+    status.className="api-key-status"+(saved?" ok":"");
+    status.textContent=saved
+      ?"설정에 저장된 API 키를 사용 중입니다. 키는 이 브라우저의 localStorage에 저장됩니다."
+      :"사용 가능한 API 키가 없습니다. 여기에 키를 입력해 저장하세요.";
+  }
+}
+function saveSettingsApiKey(){
+  if(hardcodedApiKey()){
+    alert("코드에 API 키가 지정되어 있어 설정 키보다 우선 사용됩니다.");
+    refreshApiKeySetting();
+    return;
+  }
+  const input=document.getElementById("settingsApiKeyInput");
+  const key=String(input?.value||"").trim();
+  if(key.length<=8){
+    alert("유효한 NEIS API 키를 입력하세요.");
+    return;
+  }
+  localStorage.setItem(API_KEY_STORAGE_KEY,key);
+  refreshApiKeySetting();
+}
+function clearSettingsApiKey(){
+  localStorage.removeItem(API_KEY_STORAGE_KEY);
+  refreshApiKeySetting();
+}
+
+
+function showPage(id){
+  document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  closeMobileNav();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function goHome(){showPage("homePage")}
+function openMySchool(sub){showPage("mySchoolPage");setMySchoolSubpage(sub);renderMySchoolBanners();if(!loadMySchool())setTimeout(()=>openSettings("school"),80);else if(sub==="calendar")setTimeout(()=>loadMySchoolCalendar(),80)}
+function setMySchoolSubpage(sub){const compare=sub==="compare";document.getElementById("mySchoolCompare").classList.toggle("active",compare);document.getElementById("mySchoolCalendar").classList.toggle("active",!compare);document.getElementById("mySchoolTabCompare").classList.toggle("active",compare);document.getElementById("mySchoolTabCalendar").classList.toggle("active",!compare)}
+function openSchool(sub){showPage("schoolPage");setSchoolSubpage(sub)}
+function setSchoolSubpage(sub){
+  const compare=sub==="compare", all=sub==="all", map=sub==="map";
+  schoolCompare.classList.toggle("active",compare);
+  schoolAll.classList.toggle("active",all);
+  schoolMap.classList.toggle("active",map);
+  schoolTabCompare.classList.toggle("active",compare);
+  schoolTabAll.classList.toggle("active",all);
+  schoolTabMap.classList.toggle("active",map);
+}
+function scrollToPreferences(){openSettings("preferences")}
+
+function addOptions(id, entries){
+  const el=document.getElementById(id); el.innerHTML="";
+  entries.forEach(([value,label])=>{const o=document.createElement("option");o.value=value;o.textContent=label;el.appendChild(o)});
+}
+function initSelectors(){
+  const regions=Object.entries(OFFICE_CODES).map(([name,code])=>[code,name]);
+  ["scRegion","saRegion","seasonRegion","tasteRegion","myCompRegion","settingsSchoolRegion","mySchoolSearchRegion","seasonSchoolSearchRegion"].forEach(id=>{addOptions(id,regions);document.getElementById(id).value="B10"});
+  addOptions("mapRegion",[["B10","서울"],["J10","경기"]]); document.getElementById("mapRegion").value="B10";
+  ["scTypeA","scTypeB","tasteType","myCompType","mapType"].forEach(id=>addOptions(id,GROUP_OPTIONS));
+  ["scGenderA","scGenderB","tasteGender","myCompGender","mapGender"].forEach(id=>addOptions(id,GENDER_OPTIONS));
+  scTypeA.value="일반고";scTypeB.value="특목고";tasteType.value="ALL";tasteGender.value="ALL";myCompType.value="일반고";myCompGender.value="ALL";
+  const y=new Date().getFullYear();addOptions("seasonYear",Array.from({length:5},(_,i)=>[String(y-i),`${y-i}년`]));
+  [["scRegion","scSupport"],["saRegion","saSupport"],["seasonRegion","seasonSupport"],["tasteRegion","tasteSupport"],["myCompRegion","myCompSupport"],["mapRegion","mapSupport"]].forEach(([r,s])=>{document.getElementById(r).addEventListener("change",()=>populateSupportSelector(r,s));populateSupportSelector(r,s)});
+}
+function isoDate(d){
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+function initDates(){
+  const today=new Date(),start=new Date(today);start.setMonth(today.getMonth()-6);
+  ["scFrom","saFrom","tasteFrom","myCompFrom"].forEach(id=>document.getElementById(id).value=isoDate(start));
+  ["scTo","saTo","tasteTo","myCompTo"].forEach(id=>document.getElementById(id).value=isoDate(today));
+  calendarMonth.value=isoDate(today).slice(0,7);
+  const prevYear=String(today.getFullYear()-1);if([...seasonYear.options].some(o=>o.value===prevYear))seasonYear.value=prevYear;
+}
+function setStatus(prefix,msg,pct=null,error=false){
+  const box=document.getElementById(prefix+"Status"), txt=document.getElementById(prefix+"StatusText"), bar=document.getElementById(prefix+"Progress");
+  box.classList.add("show"); box.classList.toggle("error",error); txt.textContent=msg;
+  if(bar) bar.style.width=pct==null?"0%":`${Math.max(0,Math.min(100,pct))}%`;
+}
+function validateRange(from,to,maxDays=740){
+  if(!from||!to) throw new Error("시작일과 종료일을 선택하세요.");
+  if(from>to) throw new Error("시작일이 종료일보다 늦습니다.");
+  const days=(new Date(to)-new Date(from))/86400000;
+  if(days>maxDays) throw new Error(`한 번에 최대 ${maxDays}일까지만 분석하도록 제한했습니다.`);
+}
+function ymd(iso){return iso.replaceAll("-","")}
+function localTodayISO(){return isoDate(new Date())}
+function localTodayYMD(){return ymd(localTodayISO())}
+function currentMonthStartISO(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`}
+function normalizeSchoolSearch(v){return String(v||"").toLowerCase().replace(/\s/g,"").replace(/고등학교$/,"고")}
+function schoolMatchesQuery(s,q){const nq=normalizeSchoolSearch(q),name=normalizeSchoolSearch(s.SCHUL_NM||"");return name.includes(nq)||normalizeSchoolSearch((s.SCHUL_NM||"").replace(/고등학교$/,"고")).includes(nq)}
+const activeActions=new Set();
+function setActionBusy(fnName,busy){document.querySelectorAll(`[onclick*="${fnName}("]`).forEach(b=>b.disabled=busy)}
+function beginAction(key,fnName){if(activeActions.has(key))return false;activeActions.add(key);setActionBusy(fnName,true);return true}
+function endAction(key,fnName){activeActions.delete(key);setActionBusy(fnName,false)}
+function toggleMobileNav(){document.querySelector("header nav")?.classList.toggle("open")}
+function closeMobileNav(){document.querySelector("header nav")?.classList.remove("open")}
+function setupAccessibleCards(){document.querySelectorAll(".home-card[role=button]").forEach(el=>el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();el.click()}}))}
+function showChartLibraryWarning(){document.querySelectorAll(".chart-box").forEach(box=>box.innerHTML='<div class="chart-fallback">차트 라이브러리를 불러오지 못했습니다.<br>인터넷 연결 또는 CDN 차단 여부를 확인하세요.</div>')}
+function cleanupLegacyDatabases(){
+  const legacy=["SchoolMealAnalyzerV3","SchoolMealAnalyzerV4","SchoolMealAnalyzerV5","SchoolMealAnalyzerV6","SchoolMealAnalyzerV7","SchoolMealAnalyzerV8"];
+  if(!indexedDB?.databases)return;
+  indexedDB.databases().then(list=>{const names=new Set(list.map(x=>x.name));legacy.filter(n=>names.has(n)&&n!==CACHE_DB).forEach(n=>indexedDB.deleteDatabase(n))}).catch(()=>{});
+}
+function coverageSuffix(bundle){const n=bundle?.failedSchools?.length||0;return n?` · API 실패 ${n}개교`:""}
+function coverageSuffixForCodes(bundle,codes){const set=codes instanceof Set?codes:new Set(codes||[]),n=(bundle?.failedSchools||[]).filter(f=>set.has(f.code)).length;return n?` · 대상 중 API 실패 ${n}개교`:""}
+
+
+/* =========================================================
+   설정 / 테마 / 내 학교
+   ========================================================= */
+let mySchoolSearchResults=[];
+function applySavedTheme(){setTheme(localStorage.getItem(THEME_KEY)||"light",false)}
+function setTheme(theme,persist=true){
+  const t=theme==="dark"?"dark":"light";document.body.dataset.theme=t;if(persist)localStorage.setItem(THEME_KEY,t);
+  themeLightBtn?.classList.toggle("active",t==="light");themeDarkBtn?.classList.toggle("active",t==="dark");
+  if(window.Chart){Object.values(charts).forEach(c=>{try{applyChartTheme(c);c.update()}catch{}})}
+}
+function openSettings(section=""){
+  settingsBackdrop.classList.add("show");
+  renderCurrentSchoolSetting();
+  initPreferences();
+  refreshApiKeySetting();
+  if(section){
+    const id=
+      section==="school"?"settingsSchool":
+      section==="preferences"?"settingsPreferences":
+      section==="api"?"settingsApi":
+      "settingsAppearance";
+    setTimeout(()=>document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"start"}),60);
+  }
+}
+function closeSettings(){settingsBackdrop.classList.remove("show")}
+function loadMySchool(){try{return JSON.parse(localStorage.getItem(MY_SCHOOL_KEY))||null}catch{return null}}
+function saveMySchool(school){const keep={ATPT_OFCDC_SC_CODE:school.ATPT_OFCDC_SC_CODE,ATPT_OFCDC_SC_NM:school.ATPT_OFCDC_SC_NM,SD_SCHUL_CODE:school.SD_SCHUL_CODE,SCHUL_NM:school.SCHUL_NM,SCHUL_KND_SC_NM:school.SCHUL_KND_SC_NM,LCTN_SC_NM:school.LCTN_SC_NM,JU_ORG_NM:school.JU_ORG_NM,HS_SC_NM:school.HS_SC_NM,COEDU_SC_NM:school.COEDU_SC_NM,SPCLY_PURPS_HS_ORD_NM:school.SPCLY_PURPS_HS_ORD_NM,FOND_SC_NM:school.FOND_SC_NM,ORG_RDNMA:school.ORG_RDNMA,ORG_RDNDA:school.ORG_RDNDA};localStorage.setItem(MY_SCHOOL_KEY,JSON.stringify(keep));renderCurrentSchoolSetting();renderMySchoolBanners()}
+function renderCurrentSchoolSetting(){const s=loadMySchool();settingsCurrentSchool.innerHTML=s?`<b>${esc(s.SCHUL_NM)}</b><small>${esc(s.ATPT_OFCDC_SC_NM||"")} · ${esc(s.COEDU_SC_NM||"")} · ${esc(primarySchoolType(s))}</small>`:`<b>아직 내 학교를 설정하지 않았습니다.</b><small>아래에서 검색해 저장하세요.</small>`}
+function renderMySchoolBanners(){const s=loadMySchool(),markup=s?`<div><strong>${esc(s.SCHUL_NM)}</strong><span>${esc(s.ATPT_OFCDC_SC_NM||"")} · ${esc(primarySchoolType(s))} · ${esc(s.COEDU_SC_NM||"")}</span></div><button class="ghost-btn" onclick="openSettings('school')">학교 변경</button>`:`<div><strong>내 학교가 설정되지 않았습니다.</strong><span>설정에서 학교를 먼저 선택하세요.</span></div><button class="primary" onclick="openSettings('school')">내 학교 설정</button>`;["mySchoolCompareBanner","mySchoolCalendarBanner"].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=markup})}
+function initMySchoolUI(){renderCurrentSchoolSetting();const s=loadMySchool();if(s?.ATPT_OFCDC_SC_CODE)settingsSchoolRegion.value=s.ATPT_OFCDC_SC_CODE;settingsSchoolQuery?.addEventListener("keydown",e=>{if(e.key==="Enter")searchMySchool()})}
+async function searchMySchool(){try{const office=settingsSchoolRegion.value,q=settingsSchoolQuery.value.trim();if(q.length<2)throw new Error("학교명을 두 글자 이상 입력하세요.");settingsSchoolResults.innerHTML=`<option value="">검색 중...</option>`;const schools=await getHighSchools(office);mySchoolSearchResults=schools.filter(s=>schoolMatchesQuery(s,q)).slice(0,50);settingsSchoolResults.innerHTML=mySchoolSearchResults.length?mySchoolSearchResults.map((s,i)=>`<option value="${i}">${esc(s.SCHUL_NM)} · ${esc(s.ORG_RDNMA||s.LCTN_SC_NM||"")}</option>`).join(""):`<option value="">검색 결과 없음</option>`}catch(e){alert(e.message)}}
+function saveSelectedMySchool(){const idx=Number(settingsSchoolResults.value),school=mySchoolSearchResults[idx];if(!school){alert("검색 결과에서 학교를 선택하세요.");return}saveMySchool(school);alert(`${school.SCHUL_NM}을(를) 내 학교로 저장했습니다.`)}
+
+/* =========================================================
+   2. IndexedDB 캐시
+   ========================================================= */
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(CACHE_DB,1);
+    req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(CACHE_STORE))db.createObjectStore(CACHE_STORE)};
+    req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error);
+  });
+}
+async function cacheGet(key){
+  try{const db=await openDB();return await new Promise(resolve=>{const tx=db.transaction(CACHE_STORE,"readonly");const r=tx.objectStore(CACHE_STORE).get(key);r.onsuccess=()=>resolve(r.result||null);r.onerror=()=>resolve(null)})}
+  catch{return null}
+}
+async function cacheSet(key,value){
+  try{const db=await openDB();await new Promise(resolve=>{const tx=db.transaction(CACHE_STORE,"readwrite");tx.objectStore(CACHE_STORE).put({savedAt:Date.now(),value},key);tx.oncomplete=resolve;tx.onerror=resolve})}catch{}
+}
+async function clearApiCache(){
+  try{const db=await openDB();await new Promise(resolve=>{const tx=db.transaction(CACHE_STORE,"readwrite");tx.objectStore(CACHE_STORE).clear();tx.oncomplete=resolve;tx.onerror=resolve});localStorage.removeItem(REGION_BUNDLE_MANIFEST_KEY); alert("API 응답·지역 원본 캐시를 삭제했습니다.")}catch{alert("캐시 삭제에 실패했습니다.")}
+}
+
+/* =========================================================
+   3. NEIS API
+   ========================================================= */
+const inFlightPages=new Map(),inFlightBundles=new Map();
+function sortedParams(obj){return Object.entries(obj).filter(([,v])=>v!==""&&v!=null).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>`${k}=${v}`).join("&")}
+function apiCacheTTL(service,params){
+  if(service!=="mealServiceDietInfo")return 7*86400000;
+  const to=String(params.MLSV_TO_YMD||params.MLSV_YMD||"");
+  const today=localTodayYMD(),month=today.slice(0,6);
+  if(!to||to>=today)return 30*60000;
+  if(to.slice(0,6)===month)return 6*3600000;
+  return 30*86400000;
+}
+function parseServiceResponse(data,service){
+  if(data?.RESULT){
+    if(data.RESULT.CODE==="INFO-200") return {total:0,rows:[]};
+    if(data.RESULT.CODE!=="INFO-000") throw new Error(data.RESULT.MESSAGE||data.RESULT.CODE);
+  }
+  const blocks=data?.[service];
+  if(!blocks) return {total:0,rows:[]};
+  let total=0, rows=[];
+  for(const block of blocks){
+    if(block.head) for(const h of block.head){
+      if(h.list_total_count!==undefined) total=Number(h.list_total_count)||0;
+      if(h.RESULT && h.RESULT.CODE!=="INFO-000" && h.RESULT.CODE!=="INFO-200") throw new Error(h.RESULT.MESSAGE||h.RESULT.CODE);
+    }
+    if(Array.isArray(block.row)) rows.push(...block.row);
+  }
+  return {total,rows};
+}
+async function neisPage(service,params,page=1){
+  const apiKey=getApiKey();if(!apiKey)throw new Error("NEIS API 키가 없습니다. 설정에서 API 키를 입력하세요.");
+  const cacheKey=`${service}|${page}|${sortedParams(params)}`;
+  const cached=await cacheGet(cacheKey),ttl=apiCacheTTL(service,params);
+  if(cached&&Date.now()-cached.savedAt<ttl)return cached.value;
+  if(inFlightPages.has(cacheKey))return inFlightPages.get(cacheKey);
+  const job=(async()=>{
+    const q=new URLSearchParams({KEY:apiKey,Type:"json",pIndex:String(page),pSize:String(PAGE_SIZE),...params});
+    const res=await fetch(`${API_ROOT}/${service}?${q.toString()}`);
+    if(!res.ok)throw new Error(`NEIS HTTP 오류 ${res.status}`);
+    const data=await res.json();parseServiceResponse(data,service);await cacheSet(cacheKey,data);return data;
+  })();
+  inFlightPages.set(cacheKey,job);
+  try{return await job}finally{inFlightPages.delete(cacheKey)}
+}
+async function neisAll(service,params){
+  const first=await neisPage(service,params,1);
+  const firstParsed=parseServiceResponse(first,service);
+  const pages=Math.ceil(firstParsed.total/PAGE_SIZE);
+  let rows=[...firstParsed.rows];
+  for(let p=2;p<=pages;p++){
+    const next=await neisPage(service,params,p);
+    rows.push(...parseServiceResponse(next,service).rows);
+  }
+  return rows;
+}
+async function getHighSchools(office){
+  const rows=await neisAll("schoolInfo",{ATPT_OFCDC_SC_CODE:office,SCHUL_KND_SC_NM:"고등학교"});
+  return rows.filter(s=>(s.SCHUL_KND_SC_NM||"").includes("고등학교"));
+}
+async function getMealsForSchool(school,from,to,mealCode=""){
+  const params={ATPT_OFCDC_SC_CODE:school.ATPT_OFCDC_SC_CODE,SD_SCHUL_CODE:school.SD_SCHUL_CODE,MLSV_FROM_YMD:ymd(from),MLSV_TO_YMD:ymd(to)};
+  if(mealCode) params.MMEAL_SC_CODE=mealCode;
+  const rows=await neisAll("mealServiceDietInfo",params);
+  return rows.map(r=>prepareMealRow(r,school));
+}
+async function mapInBatches(items,mapper,onProgress,retries=2){
+  const out=[],failures=[];let completed=0;
+  for(let i=0;i<items.length;i+=CONCURRENCY){
+    const batch=items.slice(i,i+CONCURRENCY);
+    let pending=batch.map(item=>({item,lastError:null}));
+    for(let attempt=0;attempt<=retries&&pending.length;attempt++){
+      const settled=await Promise.allSettled(pending.map(x=>mapper(x.item)));
+      const next=[];
+      settled.forEach((r,j)=>{const p=pending[j];if(r.status==="fulfilled")out.push(r.value);else next.push({item:p.item,lastError:r.reason})});
+      pending=next;
+      if(pending.length&&attempt<retries)await new Promise(r=>setTimeout(r,350*(attempt+1)));
+    }
+    pending.forEach(x=>{failures.push(x.item);console.warn("최종 API 실패",x.item?.SCHUL_NM||x.item,x.lastError)});
+    completed+=batch.length;if(onProgress)onProgress(completed,items.length,failures.length);
+    if(i+CONCURRENCY<items.length)await new Promise(r=>setTimeout(r,80));
+  }
+  out.failures=failures;return out;
+}
+async function collectMeals(schools,from,to,mealCode,progressCb){
+  const chunks=await mapInBatches(schools,s=>getMealsForSchool(s,from,to,mealCode),progressCb,2);
+  const rows=chunks.flat();rows.failures=chunks.failures||[];return rows;
+}
+
+function getBundleManifest(){
+  try{return JSON.parse(localStorage.getItem(REGION_BUNDLE_MANIFEST_KEY))||[]}catch{return []}
+}
+function saveBundleManifest(list){
+  localStorage.setItem(REGION_BUNDLE_MANIFEST_KEY,JSON.stringify(list.slice(-24)));
+}
+function dateInt(iso){return Number(String(iso).replaceAll("-",""))}
+async function findCoveringRegionBundle(office,from,to){
+  const manifest=getBundleManifest().filter(x=>x.office===office&&dateInt(x.from)<=dateInt(from)&&dateInt(x.to)>=dateInt(to)).sort((a,b)=>(dateInt(a.to)-dateInt(a.from))-(dateInt(b.to)-dateInt(b.from)));
+  const baseTTL=to>=localTodayISO()?30*60000:(to>=currentMonthStartISO()?6*3600000:30*86400000);
+  for(const item of manifest){
+    const cached=await cacheGet(item.key),partial=Boolean(cached?.value?.failedSchools?.length),ttl=partial?Math.min(baseTTL,15*60000):baseTTL;
+    if(cached?.value?.meals&&Date.now()-cached.savedAt<ttl){
+      const lo=ymd(from),hi=ymd(to);
+      return {schools:cached.value.schools||[],meals:cached.value.meals.filter(r=>r.MLSV_YMD>=lo&&r.MLSV_YMD<=hi),failedSchools:cached.value.failedSchools||[],fromCache:true,cacheRange:[item.from,item.to]};
+    }
+  }
+  return null;
+}
+async function getRegionDataset(office,from,to,progressCb){
+  const today=localTodayISO();if(from>today)return {schools:await getHighSchools(office),meals:[],failedSchools:[],fromCache:false,cacheRange:[from,to]};
+  const effectiveTo=to>today?today:to;
+  const covering=await findCoveringRegionBundle(office,from,effectiveTo);if(covering)return covering;
+  const flightKey=`${office}|${from}|${effectiveTo}`;if(inFlightBundles.has(flightKey))return inFlightBundles.get(flightKey);
+  const job=(async()=>{
+    const schools=await getHighSchools(office),mealRows=await collectMeals(schools,from,effectiveTo,"",progressCb),failedSchools=(mealRows.failures||[]).map(s=>({code:s.SD_SCHUL_CODE,name:s.SCHUL_NM}));
+    const meals=[...mealRows],key=`REGION_BUNDLE|${office}|${from}|${effectiveTo}`;
+    await cacheSet(key,{schools,meals,failedSchools});
+    const manifest=getBundleManifest().filter(x=>x.key!==key);manifest.push({key,office,from,to:effectiveTo,savedAt:Date.now()});saveBundleManifest(manifest);
+    return {schools,meals,failedSchools,fromCache:false,cacheRange:[from,effectiveTo]};
+  })();
+  inFlightBundles.set(flightKey,job);try{return await job}finally{inFlightBundles.delete(flightKey)}
+}
+function filterMealCode(rows,mealCode){
+  if(!mealCode) return rows;
+  return rows.filter(r=>String(r.MMEAL_SC_CODE||"")===String(mealCode));
+}
+
+
+function supportOfficeOptions(office){
+  if(office==="B10") return Object.keys(SEOUL_SUPPORT_MAP);
+  if(office==="J10") return Object.keys(GYEONGGI_SUPPORT_MAP);
+  return [];
+}
+function populateSupportSelector(regionId,supportId){
+  const office=document.getElementById(regionId).value;
+  const options=[["ALL","전체 교육지원청"],...supportOfficeOptions(office).map(x=>[x,x])];
+  addOptions(supportId,options);
+  const el=document.getElementById(supportId);
+  el.disabled=options.length===1;
+}
+function supportOfficeOf(school,office){
+  const org=school.JU_ORG_NM||"", address=`${school.ORG_RDNMA||""} ${school.ORG_RDNDA||""}`;
+  const mapping=office==="B10"?SEOUL_SUPPORT_MAP:office==="J10"?GYEONGGI_SUPPORT_MAP:null;
+  if(!mapping) return org||"기타";
+  for(const name of Object.keys(mapping)){
+    if(org.includes(name.replace("교육지원청",""))) return name;
+  }
+  for(const [name,areas] of Object.entries(mapping)){
+    if(areas.some(area=>address.includes(area))) return name;
+  }
+  return "기타";
+}
+function filterBySupport(schools,office,support){
+  if(!support||support==="ALL") return schools;
+  return schools.filter(s=>supportOfficeOf(s,office)===support);
+}
+
+/* =========================================================
+   4. 학교 분류
+   ========================================================= */
+function text(s,...keys){return keys.map(k=>s?.[k]||"").join(" ")}
+function primarySchoolType(s){
+  const name=s.SCHUL_NM||"", hs=s.HS_SC_NM||"", special=s.SPCLY_PURPS_HS_ORD_NM||"", fond=s.FOND_SC_NM||"";
+  const all=`${name} ${hs} ${special}`;
+  if(/과학/.test(special)||/과학고등학교|과학고$/.test(name)) return "과학고";
+  if(/외국어/.test(special)||/외국어고/.test(name)) return "외고";
+  if(/국제/.test(special)||/국제고/.test(name)) return "국제고";
+  if(/체육/.test(special)||/체육고/.test(name)) return "체고";
+  if(/예술/.test(special)||/예술고|예고/.test(name)) return "예고";
+  if(/산업수요|마이스터/.test(all)) return "마이스터고";
+  if(/자율/.test(hs)){ if(/사립/.test(fond)) return "자사고"; return "자율고"; }
+  if(/특성화/.test(hs)) return "특성화고";
+  if(/일반/.test(hs)) return "일반고";
+  if(/특목/.test(hs)) return "특목고";
+  return "기타";
+}
+function matchSchoolType(s,type){
+  if(type==="ALL") return true;
+  const p=primarySchoolType(s), hs=s.HS_SC_NM||"";
+  if(type==="특목고") return ["과학고","외고","국제고","체고","예고","특목고"].includes(p)||/특목/.test(hs);
+  if(type==="자율고") return p==="자율고"||p==="자사고"||/자율/.test(hs);
+  return p===type;
+}
+function matchGender(s,gender){return gender==="ALL" || (s.COEDU_SC_NM||"")===gender}
+function traitGroups(){
+  return [
+    ["일반고",s=>primarySchoolType(s)==="일반고"],["자사고",s=>primarySchoolType(s)==="자사고"],
+    ["자율고",s=>["자율고","자사고"].includes(primarySchoolType(s))],["특성화고",s=>primarySchoolType(s)==="특성화고"],
+    ["과학고",s=>primarySchoolType(s)==="과학고"],["외고",s=>primarySchoolType(s)==="외고"],["국제고",s=>primarySchoolType(s)==="국제고"],
+    ["체고",s=>primarySchoolType(s)==="체고"],["예고",s=>primarySchoolType(s)==="예고"],["마이스터고",s=>primarySchoolType(s)==="마이스터고"],
+    ["남고",s=>(s.COEDU_SC_NM||"")==="남"],["여고",s=>(s.COEDU_SC_NM||"")==="여"],["공학",s=>(s.COEDU_SC_NM||"")==="남여공학"]
+  ];
+}
+
+/* =========================================================
+   5. 메뉴 / 영양 전처리
+   ========================================================= */
+
+function prepareMealRow(r,school){
+  const row={...r,__schoolCode:school.SD_SCHUL_CODE,__schoolName:school.SCHUL_NM,__schoolMeta:school};
+  row.__menus=String(row.DDISH_NM||"").split(/<br\s*\/?>|\n/i).map(cleanMenuName).filter(Boolean);
+  const cm=String(row.CAL_INFO||"").match(/([\d.]+)/); row.__cal=cm?Number(cm[1]):NaN;
+  const raw=String(row.NTR_INFO||"").replace(/<br\s*\/?>/gi,"\n").replace(/&nbsp;/g," ");
+  const num=(name)=>{const m=raw.match(new RegExp(`${name}[^\\d]*([\\d.]+)`));return m?Number(m[1]):NaN};
+  row.__protein=num("단백질"); row.__fat=num("지방"); row.__carb=num("탄수화물");
+  const s=row.MLSV_YMD||""; if(s.length===8){
+    const d=new Date(Number(s.slice(0,4)),Number(s.slice(4,6))-1,Number(s.slice(6,8)));
+    row.__weekday=["일","월","화","수","목","금","토"][d.getDay()];
+  }
+  row.__mealName=row.MMEAL_SC_NM||({"1":"조식","2":"중식","3":"석식"}[row.MMEAL_SC_CODE]||"기타");
+  row.__schoolType=primarySchoolType(school); row.__gender=school.COEDU_SC_NM||"";
+  return row;
+}
+
+function cleanMenuName(v){
+  return String(v||"").replace(/<[^>]*>/g,"").replace(/\([^)]*\)/g,"").replace(/\d+(?:\.\d+)+\.?/g,"").replace(/\*/g,"").replace(/\s+/g," ").trim();
+}
+function getMenus(row){return row.__menus||String(row.DDISH_NM||"").split(/<br\s*\/?>|\n/i).map(cleanMenuName).filter(Boolean)}
+function hasAny(str,words){return words.some(w=>str.includes(w))}
+function isMeat(m){return hasAny(m,MEAT_WORDS)}
+function isVeg(m){return hasAny(m,VEG_WORDS)}
+function isDessert(m){return hasAny(m,DESSERT_WORDS)}
+function calories(row){if(Number.isFinite(row.__cal))return row.__cal;const m=String(row.CAL_INFO||"").match(/([\d.]+)/);return m?Number(m[1]):NaN}
+function nutrient(row,name){
+  if(name==="단백질"&&Number.isFinite(row.__protein))return row.__protein;
+  if(name==="지방"&&Number.isFinite(row.__fat))return row.__fat;
+  if(name==="탄수화물"&&Number.isFinite(row.__carb))return row.__carb;
+  const raw=String(row.NTR_INFO||"").replace(/<br\s*\/?>/gi,"\n").replace(/&nbsp;/g," ");
+  const m=raw.match(new RegExp(`${name}[^\\d]*([\\d.]+)`)); return m?Number(m[1]):NaN;
+}
+function mean(arr){const v=arr.filter(Number.isFinite);return v.length?v.reduce((a,b)=>a+b,0)/v.length:NaN}
+function round(n,d=1){return Number.isFinite(n)?Math.round(n*10**d)/10**d:null}
+function pct(a,b){return b?round(a/b*100,1):null}
+function dateObj(row){const s=row.MLSV_YMD;return new Date(Number(s.slice(0,4)),Number(s.slice(4,6))-1,Number(s.slice(6,8)))}
+function monthKey(row){return row.MLSV_YMD.slice(0,6)}
+function formatMonth(k){return `${k.slice(0,4)}-${k.slice(4,6)}`}
+function weekdayName(row){return row.__weekday||["일","월","화","수","목","금","토"][dateObj(row).getDay()]}
+function mealName(row){return row.__mealName||row.MMEAL_SC_NM||({"1":"조식","2":"중식","3":"석식"}[row.MMEAL_SC_CODE]||"기타")}
+
+/* =========================================================
+   6. 공통 통계 / 차트
+   ========================================================= */
+function summarize(rows){
+  let menuCount=0,meat=0,veg=0,dessertMeals=0;
+  rows.forEach(r=>{let dessert=false;getMenus(r).forEach(m=>{menuCount++;if(isMeat(m))meat++;if(isVeg(m))veg++;if(isDessert(m))dessert=true});if(dessert)dessertMeals++});
+  return {
+    meals:rows.length,cal:round(mean(rows.map(calories))),protein:round(mean(rows.map(r=>nutrient(r,"단백질")))),
+    fat:round(mean(rows.map(r=>nutrient(r,"지방")))),carb:round(mean(rows.map(r=>nutrient(r,"탄수화물")))),
+    meat:pct(meat,menuCount),veg:pct(veg,menuCount),dessert:pct(dessertMeals,rows.length)
+  };
+}
+function summarizeSchoolWeighted(rows){
+  if(!rows.length)return summarize(rows);
+  const groups=new Map();rows.forEach(r=>{const k=r.__schoolCode||"_";if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r)});
+  const per=[...groups.values()].map(summarize),avg=f=>round(mean(per.map(x=>x[f])));
+  return {meals:rows.length,schools:groups.size,cal:avg("cal"),protein:avg("protein"),fat:avg("fat"),carb:avg("carb"),meat:avg("meat"),veg:avg("veg"),dessert:avg("dessert")};
+}
+function monthlySummary(rows){
+  const groups=new Map();rows.forEach(r=>{const k=monthKey(r);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r)});
+  const keys=[...groups.keys()].sort();return {keys,stats:keys.map(k=>summarizeSchoolWeighted(groups.get(k)))};
+}
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id]}}
+const CHART_COLORS=["#2563eb","#f97316","#16a34a","#a855f7","#e11d48","#0891b2","#ca8a04","#4f46e5","#db2777","#0f766e","#7c3aed","#ea580c"];
+function currentChartTheme(){
+  const dark=document.body.dataset.theme==="dark";
+  return dark?{text:"#cbd5e1",grid:"#334155",tooltipBg:"#f8fafc",tooltipText:"#111827"}:{text:"#596273",grid:"#e5e9ef",tooltipBg:"#20252d",tooltipText:"#ffffff"};
+}
+function chartThemeOptions(){
+  const t=currentChartTheme();
+  return {scales:{x:{ticks:{color:t.text},grid:{color:t.grid},border:{color:t.grid}},y:{ticks:{color:t.text},grid:{color:t.grid},border:{color:t.grid}}},plugins:{legend:{labels:{color:t.text}},tooltip:{backgroundColor:t.tooltipBg,titleColor:t.tooltipText,bodyColor:t.tooltipText,borderColor:t.grid,borderWidth:1}}};
+}
+function applyChartTheme(chart){
+  const t=currentChartTheme();
+  for(const axis of ["x","y"]){if(chart.options.scales?.[axis]){chart.options.scales[axis].ticks.color=t.text;chart.options.scales[axis].grid.color=t.grid;chart.options.scales[axis].border.color=t.grid}}
+  if(chart.options.plugins?.legend?.labels)chart.options.plugins.legend.labels.color=t.text;
+  if(chart.options.plugins?.tooltip){Object.assign(chart.options.plugins.tooltip,{backgroundColor:t.tooltipBg,titleColor:t.tooltipText,bodyColor:t.tooltipText,borderColor:t.grid,borderWidth:1})}
+}
+function hexToRgba(hex,a){
+  const h=hex.replace("#",""),v=parseInt(h.length===3?h.split("").map(x=>x+x).join(""):h,16);
+  return `rgba(${(v>>16)&255},${(v>>8)&255},${v&255},${a})`;
+}
+function styledDatasets(datasets,kind="line"){
+  return datasets.map((d,i)=>{
+    const c=d.borderColor||d.backgroundColor||CHART_COLORS[i%CHART_COLORS.length];
+    if(kind==="line")return {...d,borderColor:c,backgroundColor:hexToRgba(c,.14),pointBackgroundColor:c,pointBorderColor:c,borderWidth:3,pointRadius:4,pointHoverRadius:6,fill:false};
+    return {...d,backgroundColor:d.backgroundColor||hexToRgba(c,.78),borderColor:d.borderColor||c,borderWidth:1.5};
+  });
+}
+
+function makeLine(id,labels,datasets,suffix=""){
+  if(!window.Chart){const box=document.getElementById(id)?.parentElement;if(box)box.innerHTML='<div class="chart-fallback">차트 라이브러리를 불러오지 못했습니다.</div>';return}
+  destroyChart(id);const theme=chartThemeOptions();
+  charts[id]=new Chart(document.getElementById(id),{type:"line",data:{labels,datasets:styledDatasets(datasets.map(d=>({...d,tension:.25,spanGaps:true})),"line")},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},scales:theme.scales,plugins:{legend:{labels:{...theme.plugins.legend.labels,usePointStyle:true,pointStyle:"line"}},tooltip:{...theme.plugins.tooltip,callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y??"-"}${suffix}`}}}}});
+}
+function makeBar(id,labels,datasets,suffix="",onClick=null){
+  if(!window.Chart){const box=document.getElementById(id)?.parentElement;if(box)box.innerHTML='<div class="chart-fallback">차트 라이브러리를 불러오지 못했습니다.</div>';return}
+  destroyChart(id);const theme=chartThemeOptions();
+  charts[id]=new Chart(document.getElementById(id),{type:"bar",data:{labels,datasets:styledDatasets(datasets,"bar")},options:{responsive:true,maintainAspectRatio:false,onClick:(evt,els)=>{if(onClick&&els.length)onClick(els[0].index)},scales:theme.scales,plugins:{legend:{labels:{...theme.plugins.legend.labels,usePointStyle:true,pointStyle:"rectRounded"}},tooltip:{...theme.plugins.tooltip,callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y??"-"}${suffix}`}}}}});
+}
+
+/* =========================================================
+   우리학교 A / B
+========================================================= */
+let myCompareMode="group",myCompareSelectedSchools=[],myCompareSearchResults=[];
+function setMyCompareMode(mode){
+  myCompareMode=mode==="schools"?"schools":"group";
+  myModeGroupBtn.classList.toggle("active",myCompareMode==="group");myModeSchoolsBtn.classList.toggle("active",myCompareMode==="schools");
+  myCompareGroupControls.classList.toggle("hidden",myCompareMode!=="group");myCompareSchoolControls.classList.toggle("hidden",myCompareMode!=="schools");
+}
+async function searchMyCompareSchools(){
+  try{const office=mySchoolSearchRegion.value,q=mySchoolSearchQuery.value.trim();if(q.length<2)throw new Error("학교명을 두 글자 이상 입력하세요.");mySchoolSearchResults.innerHTML=`<option value="">검색 중...</option>`;const schools=await getHighSchools(office);myCompareSearchResults=schools.filter(s=>schoolMatchesQuery(s,q)).slice(0,50);mySchoolSearchResults.innerHTML=myCompareSearchResults.length?myCompareSearchResults.map((s,i)=>`<option value="${i}">${esc(s.SCHUL_NM)} · ${esc(s.ORG_RDNMA||"")}</option>`).join(""):`<option value="">검색 결과 없음</option>`}catch(e){alert(e.message)}
+}
+function addMyCompareSchool(){
+  const idx=Number(mySchoolSearchResults.value),school=myCompareSearchResults[idx],own=loadMySchool();if(!school){alert("검색 결과에서 학교를 선택하세요.");return}if(own?.SD_SCHUL_CODE===school.SD_SCHUL_CODE){alert("내 학교는 이미 비교 기준에 포함되어 있습니다.");return}if(myCompareSelectedSchools.some(s=>s.SD_SCHUL_CODE===school.SD_SCHUL_CODE))return;if(myCompareSelectedSchools.length>=5){alert("비교 학교는 최대 5개까지 추가할 수 있습니다.");return}myCompareSelectedSchools.push(school);renderMyCompareSelectedSchools();
+}
+function removeMyCompareSchool(code){myCompareSelectedSchools=myCompareSelectedSchools.filter(s=>s.SD_SCHUL_CODE!==code);renderMyCompareSelectedSchools()}
+function renderMyCompareSelectedSchools(){mySelectedSchools.innerHTML=myCompareSelectedSchools.length?myCompareSelectedSchools.map(s=>`<span class="school-chip">${esc(s.SCHUL_NM)}<button onclick="removeMyCompareSchool('${escAttr(s.SD_SCHUL_CODE)}')">×</button></span>`).join(""):`<span style="color:var(--muted);font-size:13px">비교할 학교를 검색해 추가하세요.</span>`}
+async function runMySchoolCompare(){
+  if(!beginAction("myComp","runMySchoolCompare"))return;
+  try{
+    const own=loadMySchool();if(!own){openSettings("school");throw new Error("설정에서 내 학교를 먼저 선택하세요.")}
+    const from=myCompFrom.value,to=myCompTo.value,meal=myCompMeal.value;validateRange(from,to);setStatus("myComp","비교 데이터를 준비하는 중...",3);
+    let ownMeals=filterMealCode(await getMealsForSchool(own,from,to,""),meal);if(!ownMeals.length)throw new Error("선택 기간의 내 학교 급식 데이터가 없습니다.");
+    let compareSeries=[],compareMealCount=0,targetCount=0,statusLabel="",coverageNote="";
+    if(myCompareMode==="group"){
+      const office=myCompRegion.value,support=myCompSupport.value,bundle=await getRegionDataset(office,from,to,(n,t)=>setStatus("myComp",`비교 지역 캐시 생성: ${n}/${t}개 학교`,5+n/t*70));
+      let schools=filterBySupport(bundle.schools,office,support).filter(s=>matchSchoolType(s,myCompType.value)&&matchGender(s,myCompGender.value)).filter(s=>s.SD_SCHUL_CODE!==own.SD_SCHUL_CODE);if(!schools.length)throw new Error("선택한 조건에 해당하는 비교 학교가 없습니다.");
+      const ids=new Set(schools.map(s=>s.SD_SCHUL_CODE)),rows=filterMealCode(bundle.meals,meal).filter(r=>ids.has(r.__schoolCode));targetCount=schools.length;compareMealCount=rows.length;
+      const ms=monthlySummary(rows),map=Object.fromEntries(ms.keys.map((k,i)=>[k,ms.stats[i]]));compareSeries=[{label:`${myCompRegion.options[myCompRegion.selectedIndex].text} · ${myCompType.options[myCompType.selectedIndex].text}${myCompGender.value==="ALL"?"":` · ${myCompGender.options[myCompGender.selectedIndex].text}`}`,summary:ms,map}];statusLabel=`학교 집단 ${schools.length}개교`;coverageNote=coverageSuffix(bundle);
+    }else{
+      if(!myCompareSelectedSchools.length)throw new Error("비교할 개별 학교를 하나 이상 추가하세요.");
+      const settled=await Promise.allSettled(myCompareSelectedSchools.map(async s=>({school:s,rows:filterMealCode(await getMealsForSchool(s,from,to,""),meal)}))),results=settled.filter(x=>x.status==="fulfilled").map(x=>x.value),failed=settled.length-results.length;
+      if(!results.length)throw new Error("선택한 비교 학교 급식 데이터를 불러오지 못했습니다.");
+      compareSeries=results.map(x=>{const ms=monthlySummary(x.rows);return {label:x.school.SCHUL_NM,summary:ms,map:Object.fromEntries(ms.keys.map((k,i)=>[k,ms.stats[i]])),rows:x.rows}});targetCount=results.length;compareMealCount=results.reduce((a,x)=>a+x.rows.length,0);statusLabel=`개별 학교 ${results.length}개`;coverageNote=failed?` · API 실패 ${failed}개교`:"";
+    }
+    const ownSummary=monthlySummary(ownMeals),ownMap=Object.fromEntries(ownSummary.keys.map((k,i)=>[k,ownSummary.stats[i]]));const keys=[...new Set([...ownSummary.keys,...compareSeries.flatMap(x=>x.summary.keys)])].sort();
+    const makeSeries=field=>[{label:own.SCHUL_NM,data:keys.map(k=>ownMap[k]?.[field]??null),borderColor:CHART_COLORS[0],backgroundColor:CHART_COLORS[0]},...compareSeries.map((x,i)=>({label:x.label,data:keys.map(k=>x.map[k]?.[field]??null),borderColor:CHART_COLORS[(i+1)%CHART_COLORS.length],backgroundColor:CHART_COLORS[(i+1)%CHART_COLORS.length]}))];
+    myCompSchoolName.textContent=own.SCHUL_NM;myCompTargetCount.textContent=targetCount;myCompOwnMeals.textContent=ownMeals.length.toLocaleString();myCompGroupMeals.textContent=compareMealCount.toLocaleString();
+    makeLine("myCompCalChart",keys.map(formatMonth),makeSeries("cal")," kcal");makeLine("myCompProteinChart",keys.map(formatMonth),makeSeries("protein")," g");makeLine("myCompMeatChart",keys.map(formatMonth),makeSeries("meat"),"%");makeLine("myCompVegChart",keys.map(formatMonth),makeSeries("veg"),"%");setStatus("myComp",`완료: ${own.SCHUL_NM} vs ${statusLabel}${coverageNote}`,100);
+  }catch(e){console.error(e);setStatus("myComp",`오류: ${e.message}`,0,true)}finally{endAction("myComp","runMySchoolCompare")}
+}
+let calendarState={month:"",rows:[],byDate:new Map(),selectedDate:""};
+async function loadMySchoolCalendar(){
+  if(!beginAction("calendar","loadMySchoolCalendar"))return;
+  try{const own=loadMySchool();if(!own){openSettings("school");throw new Error("설정에서 내 학교를 먼저 선택하세요.")}const month=calendarMonth.value;if(!month)throw new Error("월을 선택하세요.");const [y,m]=month.split("-").map(Number),last=new Date(y,m,0).getDate(),from=`${month}-01`,to=`${month}-${String(last).padStart(2,"0")}`;setStatus("calendar",`${own.SCHUL_NM} ${month} 급식을 불러오는 중...`,15);const rows=await getMealsForSchool(own,from,to,"");const byDate=new Map();rows.forEach(r=>{if(!byDate.has(r.MLSV_YMD))byDate.set(r.MLSV_YMD,[]);byDate.get(r.MLSV_YMD).push(r)});for(const arr of byDate.values())arr.sort((a,b)=>Number(a.MMEAL_SC_CODE||9)-Number(b.MMEAL_SC_CODE||9));calendarState={month,rows,byDate,selectedDate:""};renderCalendar(y,m,byDate);calendarDetailTitle.textContent="날짜를 선택하세요";calendarMealTabs.innerHTML="";calendarScore.textContent="-";calendarNutrition.innerHTML="";calendarMenus.innerHTML="";renderEmptyTray("calendarTray",true);setStatus("calendar",`완료: ${month} 급식 ${rows.length}건`,100)}catch(e){console.error(e);setStatus("calendar",`오류: ${e.message}`,0,true)}finally{endAction("calendar","loadMySchoolCalendar")}}
+function renderCalendar(year,month,byDate){const first=new Date(year,month-1,1),last=new Date(year,month,0).getDate(),offset=(first.getDay()+6)%7,cells=[];for(let i=0;i<offset;i++)cells.push(`<button class="cal-day out" disabled></button>`);for(let d=1;d<=last;d++){const key=`${year}${String(month).padStart(2,"0")}${String(d).padStart(2,"0")}`,meals=byDate.get(key)||[],lunch=meals.find(r=>String(r.MMEAL_SC_CODE)==="2")||meals[0],score=lunch?mealPreferenceScore(lunch):null;cells.push(`<button class="cal-day ${meals.length?"has-meal":""}" data-date="${key}" onclick="selectCalendarDay('${key}')"><span class="daynum">${d}</span>${meals.length?`<span class="meal-dot"></span>`:""}${score!=null?`<span class="day-score">${score}점</span>`:""}</button>`)}mealCalendar.innerHTML=cells.join("")}
+function selectCalendarDay(dateKey){const rows=calendarState.byDate.get(dateKey)||[];calendarState.selectedDate=dateKey;document.querySelectorAll(".cal-day").forEach(x=>x.classList.toggle("selected",x.dataset.date===dateKey));calendarDetailTitle.textContent=`${displayDate(dateKey)} 급식`;if(!rows.length){calendarMealTabs.innerHTML="";calendarScore.textContent="-";calendarNutrition.innerHTML="";calendarMenus.innerHTML="급식 데이터가 없습니다.";renderEmptyTray("calendarTray",true);return}calendarMealTabs.innerHTML=rows.map((r,i)=>`<button class="chip-btn ${i===0?"active":""}" onclick="showCalendarMeal(${i})">${esc(mealName(r))}</button>`).join("");const li=rows.findIndex(r=>String(r.MMEAL_SC_CODE)==="2");showCalendarMeal(li>=0?li:0)}
+function showCalendarMeal(index){const rows=calendarState.byDate.get(calendarState.selectedDate)||[],row=rows[index];if(!row)return;[...calendarMealTabs.querySelectorAll(".chip-btn")].forEach((b,i)=>b.classList.toggle("active",i===index));calendarScore.textContent=mealPreferenceScore(row);calendarNutrition.innerHTML=[["열량",`${round(calories(row))??"-"} kcal`],["단백질",`${round(nutrient(row,"단백질"))??"-"} g`],["지방",`${round(nutrient(row,"지방"))??"-"} g`],["탄수화물",`${round(nutrient(row,"탄수화물"))??"-"} g`]].map(([k,v])=>`<div class="nutrition-cell"><b>${v}</b><small>${k}</small></div>`).join("");renderTray("calendarTray",row,true);calendarMenus.innerHTML=`<b>${esc(mealName(row))}</b><br>${getMenus(row).map(esc).join(" · ")}`}
+
+
+/* =========================================================
+   오늘의 급식 지도 - 외부 지도 API 없이 SVG 시각화
+   ========================================================= */
+let todayMapState={ranked:[],office:"B10",selectedCode:""};
+function scoreMarkerColor(score){if(score>=80)return "#16a34a";if(score>=60)return "#2563eb";if(score>=40)return "#f59e0b";return "#64748b"}
+const SEOUL_AREA_POINTS={"강서구":[150,295],"양천구":[215,350],"구로구":[255,410],"금천구":[320,475],"영등포구":[315,350],"동작구":[395,410],"관악구":[410,485],"서초구":[515,445],"강남구":[590,405],"송파구":[690,375],"강동구":[760,300],"마포구":[305,290],"서대문구":[350,235],"은평구":[325,150],"종로구":[430,245],"중구":[470,290],"용산구":[455,355],"성북구":[505,195],"강북구":[500,115],"도봉구":[540,62],"노원구":[615,105],"동대문구":[555,245],"중랑구":[635,220],"성동구":[550,315],"광진구":[635,310]};
+const GYEONGGI_AREA_POINTS={"연천군":[455,45],"파주시":[330,85],"동두천시":[515,90],"포천시":[590,90],"가평군":[720,125],"양주시":[500,145],"고양시":[350,165],"의정부시":[520,190],"남양주시":[625,215],"김포시":[225,235],"구리시":[575,255],"부천시":[250,310],"광명시":[285,335],"하남시":[660,300],"과천시":[400,340],"안양시":[335,365],"성남시":[525,360],"시흥시":[260,405],"군포시":[350,395],"의왕시":[395,395],"수원시":[415,425],"안산시":[260,460],"화성시":[330,505],"오산시":[430,475],"용인시":[570,445],"광주시":[650,375],"양평군":[770,335],"평택시":[450,555],"안성시":[570,555],"이천시":[680,455],"여주시":[770,435]};
+function mapAreaName(school,office){const address=`${school.ORG_RDNMA||""} ${school.ORG_RDNDA||""}`,points=office==="B10"?SEOUL_AREA_POINTS:GYEONGGI_AREA_POINTS;return Object.keys(points).find(name=>address.includes(name))||"기타"}
+function hashValue(code){let h=0;for(const c of String(code||""))h=(h*31+c.charCodeAt(0))>>>0;return h}
+function mapPointForSchool(school,office,areaIndex=0,areaTotal=1,fallbackIndex=0){const points=office==="B10"?SEOUL_AREA_POINTS:GYEONGGI_AREA_POINTS,area=mapAreaName(school,office),base=points[area]||[450+(fallbackIndex%9-4)*22,310+(Math.floor(fallbackIndex/9)%7-3)*22],h=hashValue(school.SD_SCHUL_CODE),slots=Math.max(1,Math.min(8,areaTotal)),ring=Math.floor(areaIndex/slots),pos=areaIndex%slots,angle=(2*Math.PI*pos/slots)+((h%19)-9)*0.015,r=areaTotal===1?0:10+ring*10+(h%5);return {x:base[0]+Math.cos(angle)*r,y:base[1]+Math.sin(angle)*r,area}}
+function svgMapBackground(office){const points=office==="B10"?SEOUL_AREA_POINTS:GYEONGGI_AREA_POINTS,shape=office==="B10"?`<path class="map-region-shape" d="M105 325 Q125 220 260 165 Q320 65 505 65 Q680 75 790 245 Q820 360 700 430 Q610 515 420 520 Q245 510 130 410 Z"/>`:`<path class="map-region-shape" d="M180 260 Q170 95 330 45 Q520 5 720 80 Q830 165 820 345 Q835 500 690 585 Q500 620 315 565 Q160 500 160 350 Z"/><ellipse cx="475" cy="300" rx="120" ry="95" fill="var(--bg)" stroke="var(--line)" stroke-width="2"/>`;const labels=Object.entries(points).map(([name,[x,y]])=>`<text x="${x}" y="${y-22}" class="map-area-label">${name.replace(/(특별시|광역시|시|군|구)$/,'')}</text>`).join("");return shape+labels}
+function renderMapRanking(ranked){mapRankingList.innerHTML=ranked.length?ranked.slice(0,30).map((x,i)=>`<div class="map-rank-item" onclick="focusSvgSchool('${escAttr(x.school.SD_SCHUL_CODE)}')"><div class="map-rank-no">${i+1}</div><div class="map-rank-main"><b>${esc(x.school.SCHUL_NM)}</b><small>${esc(getMenus(x.meal).slice(0,4).join(" · "))}</small></div><div class="map-rank-score" style="color:${scoreMarkerColor(x.score)}">${x.score}</div></div>`).join(""):"오늘 해당 조건의 급식 데이터가 없습니다."}
+function renderLocalMealMap(ranked,office){
+  todayMapState.ranked=ranked;todayMapState.office=office;
+  const limit=mapLimit.value==="ALL"?ranked.length:Number(mapLimit.value||50),visible=ranked.slice(0,limit),totals=new Map(),seen=new Map();
+  visible.forEach(item=>{const area=mapAreaName(item.school,office);totals.set(area,(totals.get(area)||0)+1)});
+  const markers=visible.map((item,i)=>{const area=mapAreaName(item.school,office),idx=seen.get(area)||0;seen.set(area,idx+1);const p=mapPointForSchool(item.school,office,idx,totals.get(area)||1,i);item.__svgPoint=p;return `<g id="mapMarker_${escAttr(item.school.SD_SCHUL_CODE)}" class="map-school-marker" onclick="focusSvgSchool('${escAttr(item.school.SD_SCHUL_CODE)}')"><circle class="map-marker-circle" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="15" fill="${scoreMarkerColor(item.score)}"/><text class="map-marker-text" x="${p.x.toFixed(1)}" y="${p.y.toFixed(1)}">${item.score}</text></g>`}).join("");
+  todayMap.innerHTML=`<svg class="local-map-svg" viewBox="0 0 900 620" aria-label="${office==="B10"?"서울":"경기"} 오늘 급식 취향 점수 분석 지도">${svgMapBackground(office)}${markers}</svg>`;mapShownCount.textContent=visible.length;if(visible[0])focusSvgSchool(visible[0].school.SD_SCHUL_CODE);
+}
+function focusSvgSchool(code){todayMapState.selectedCode=code;document.querySelectorAll(".map-school-marker").forEach(x=>x.classList.toggle("selected",x.id===`mapMarker_${code}`));const item=todayMapState.ranked.find(x=>x.school.SD_SCHUL_CODE===code);if(!item)return;mapSelectionDetail.innerHTML=`<b>${esc(item.school.SCHUL_NM)} · <span style="color:${scoreMarkerColor(item.score)}">${item.score}점</span></b><small>${esc(item.__svgPoint?.area||"")} · ${esc(getMenus(item.meal).join(" · "))}<br>※ 위치는 학교 주소의 구/시·군 단위 상대 배치입니다.</small>`}
+async function runTodayMealMap(){
+  if(!beginAction("map","runTodayMealMap"))return;
+  try{const prefs=loadPrefs();if(!prefs.categories.length&&!prefs.favorites.length){openSettings("preferences");throw new Error("설정에서 내 급식 취향을 먼저 선택하세요.")}const office=mapRegion.value,support=mapSupport.value,type=mapType.value,gender=mapGender.value,mealCode=mapMeal.value,today=localTodayISO();mapDate.textContent=today;setStatus("map","오늘 급식 데이터를 준비하는 중...",4);const bundle=await getRegionDataset(office,today,today,(n,t,f)=>setStatus("map",`오늘 급식 수집: ${n}/${t}개 학교${f?` · 현재 실패 ${f}`:""}`,n/t*85));let schools=filterBySupport(bundle.schools,office,support).filter(s=>matchSchoolType(s,type)&&matchGender(s,gender));const ids=new Set(schools.map(s=>s.SD_SCHUL_CODE)),rows=filterMealCode(bundle.meals,mealCode).filter(r=>ids.has(r.__schoolCode)),bySchool=new Map();rows.forEach(r=>{if(!bySchool.has(r.__schoolCode))bySchool.set(r.__schoolCode,r)});const schoolMap=new Map(schools.map(s=>[s.SD_SCHUL_CODE,s])),ranked=[...bySchool.entries()].map(([code,meal])=>({school:schoolMap.get(code),meal,score:mealPreferenceScore(meal,prefs)})).filter(x=>x.school).sort((a,b)=>b.score-a.score||a.school.SCHUL_NM.localeCompare(b.school.SCHUL_NM,"ko"));renderMapRanking(ranked);mapMealSchoolCount.textContent=ranked.length;mapBestSchool.textContent=ranked[0]?`${ranked[0].school.SCHUL_NM} (${ranked[0].score})`:"-";if(!ranked.length){mapShownCount.textContent="0";todayMap.innerHTML=`<div class="map-empty">오늘 선택 조건에 해당하는 급식 데이터가 없습니다.</div>`;setStatus("map",`오늘 선택 조건에 해당하는 급식 데이터가 없습니다.${coverageSuffixForCodes(bundle,ids)}`,100);return}renderLocalMealMap(ranked,office);setStatus("map",`완료: 오늘 급식 ${ranked.length}개교 분석 · 최고 ${ranked[0].school.SCHUL_NM} ${ranked[0].score}점${coverageSuffixForCodes(bundle,ids)}`,100)}catch(e){console.error(e);setStatus("map",`오류: ${e.message}`,0,true)}finally{endAction("map","runTodayMealMap")}
+}
+
+/* =========================================================
+   7. 학교 분석 A
+   ========================================================= */
+async function runSchoolCompare(){
+  if(!beginAction("sc","runSchoolCompare"))return;
+  try{
+    const office=scRegion.value,from=scFrom.value,to=scTo.value,meal=scMeal.value,support=scSupport.value;validateRange(from,to);setStatus("sc","지역 원본 데이터를 확인하는 중...",2);
+    const bundle=await getRegionDataset(office,from,to,(n,t,f)=>setStatus("sc",`지역 원본 캐시 생성: ${n}/${t}개 학교${f?` · 현재 실패 ${f}`:""}`,n/t*88));
+    const schools=filterBySupport(bundle.schools,office,support),A=schools.filter(s=>matchSchoolType(s,scTypeA.value)&&matchGender(s,scGenderA.value)),B=schools.filter(s=>matchSchoolType(s,scTypeB.value)&&matchGender(s,scGenderB.value));if(!A.length||!B.length)throw new Error("선택 조건에 해당하는 학교가 없습니다.");
+    const aid=new Set(A.map(s=>s.SD_SCHUL_CODE)),bid=new Set(B.map(s=>s.SD_SCHUL_CODE)),scoped=filterMealCode(bundle.meals,meal),mealsA=[],mealsB=[];scoped.forEach(r=>{if(aid.has(r.__schoolCode))mealsA.push(r);if(bid.has(r.__schoolCode))mealsB.push(r)});
+    scCountA.textContent=A.length;scCountB.textContent=B.length;scMealsA.textContent=mealsA.length.toLocaleString();scMealsB.textContent=mealsB.length.toLocaleString();
+    const mA=monthlySummary(mealsA),mB=monthlySummary(mealsB),keys=[...new Set([...mA.keys,...mB.keys])].sort(),mapA=Object.fromEntries(mA.keys.map((k,i)=>[k,mA.stats[i]])),mapB=Object.fromEntries(mB.keys.map((k,i)=>[k,mB.stats[i]]));
+    const labelA=`${scTypeA.options[scTypeA.selectedIndex].text}${scGenderA.value==="ALL"?"":`·${scGenderA.options[scGenderA.selectedIndex].text}`}`,labelB=`${scTypeB.options[scTypeB.selectedIndex].text}${scGenderB.value==="ALL"?"":`·${scGenderB.options[scGenderB.selectedIndex].text}`}`,series=field=>[{label:labelA,data:keys.map(k=>mapA[k]?.[field]??null)},{label:labelB,data:keys.map(k=>mapB[k]?.[field]??null)}];
+    makeLine("scCalChart",keys.map(formatMonth),series("cal")," kcal");makeLine("scProteinChart",keys.map(formatMonth),series("protein")," g");makeLine("scMeatChart",keys.map(formatMonth),series("meat"),"%");makeLine("scVegChart",keys.map(formatMonth),series("veg"),"%");
+    const overlap=(scTypeA.value==="자율고"&&scTypeB.value==="자사고")||(scTypeB.value==="자율고"&&scTypeA.value==="자사고")||(scTypeA.value==="특목고"&&["과학고","외고","국제고","체고","예고"].includes(scTypeB.value))||(scTypeB.value==="특목고"&&["과학고","외고","국제고","체고","예고"].includes(scTypeA.value));
+    const note=overlap?" · 주의: 두 분류는 서로 일부 포함 관계입니다.":"",cacheMsg=bundle.fromCache?`캐시 ${bundle.cacheRange[0]}~${bundle.cacheRange[1]} 재사용`:"지역 원본 캐시 저장 완료";setStatus("sc",`완료: ${A.length+B.length}개 학교, 급식 ${(mealsA.length+mealsB.length).toLocaleString()}건 · ${cacheMsg}${coverageSuffixForCodes(bundle,new Set([...aid,...bid]))}${note}`,100);
+  }catch(e){console.error(e);setStatus("sc",`오류: ${e.message}`,0,true)}finally{endAction("sc","runSchoolCompare")}
+}
+
+/* =========================================================
+   8. 학교 분석 B
+   ========================================================= */
+async function runSchoolAll(){
+  if(!beginAction("sa","runSchoolAll"))return;
+  try{
+    const office=saRegion.value,from=saFrom.value,to=saTo.value,meal=saMeal.value,support=saSupport.value;validateRange(from,to);setStatus("sa","지역 원본 데이터를 확인하는 중...",2);
+    const bundle=await getRegionDataset(office,from,to,(n,t,f)=>setStatus("sa",`지역 원본 캐시 생성: ${n}/${t}개 학교${f?` · 현재 실패 ${f}`:""}`,n/t*88)),schools=filterBySupport(bundle.schools,office,support),ids=new Set(schools.map(s=>s.SD_SCHUL_CODE)),meals=filterMealCode(bundle.meals,meal).filter(r=>ids.has(r.__schoolCode));
+    const schoolCountByType=new Map();schools.forEach(s=>{const g=primarySchoolType(s);schoolCountByType.set(g,(schoolCountByType.get(g)||0)+1)});const mealsByType=new Map();meals.forEach(r=>{const g=r.__schoolType||primarySchoolType(r.__schoolMeta);if(!mealsByType.has(g))mealsByType.set(g,[]);mealsByType.get(g).push(r)});
+    const groups=["일반고","자사고","자율고","특성화고","과학고","외고","국제고","체고","예고","마이스터고","기타"],rows=groups.map(g=>({group:g==="자율고"?"자율고(자사고 제외)":g,rawGroup:g,schoolCount:schoolCountByType.get(g)||0,...summarizeSchoolWeighted(mealsByType.get(g)||[])})).filter(x=>x.schoolCount>0&&x.meals>0);
+    makeBar("saCalChart",rows.map(x=>x.group),[{label:"학교별 평균 kcal의 평균",data:rows.map(x=>x.cal)}]," kcal");makeBar("saProteinChart",rows.map(x=>x.group),[{label:"학교별 평균 단백질의 평균",data:rows.map(x=>x.protein)}]," g");makeBar("saMenuChart",rows.map(x=>x.group),[{label:"학교별 육류 비율 평균",data:rows.map(x=>x.meat)},{label:"학교별 채소 비율 평균",data:rows.map(x=>x.veg)}],"%");
+    saTable.innerHTML=`<thead><tr><th>유형</th><th>학교 수</th><th>급식 건수</th><th>kcal</th><th>단백질(g)</th><th>육류(%)</th><th>채소(%)</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${esc(x.group)}</td><td>${x.schoolCount}</td><td>${x.meals.toLocaleString()}</td><td>${x.cal??"-"}</td><td>${x.protein??"-"}</td><td>${x.meat??"-"}</td><td>${x.veg??"-"}</td></tr>`).join("")}</tbody>`;setStatus("sa",`완료: ${schools.length}개 학교, 급식 ${meals.length.toLocaleString()}건 · 학교별 동일 가중 평균${coverageSuffixForCodes(bundle,ids)}`,100);
+  }catch(e){console.error(e);setStatus("sa",`오류: ${e.message}`,0,true)}finally{endAction("sa","runSchoolAll")}
+}
+
+/* =========================================================
+   9. 계절 특이도
+   ========================================================= */
+let seasonAnalysisMode="region",seasonSelectedSchool=null,seasonSchoolSearchMatches=[];
+function setSeasonMode(mode){seasonAnalysisMode=mode==="school"?"school":"region";seasonModeRegionBtn.classList.toggle("active",seasonAnalysisMode==="region");seasonModeSchoolBtn.classList.toggle("active",seasonAnalysisMode==="school");seasonRegionControls.classList.toggle("hidden",seasonAnalysisMode!=="region");seasonSchoolControls.classList.toggle("hidden",seasonAnalysisMode!=="school")}
+async function searchSeasonSchools(){
+  try{const office=seasonSchoolSearchRegion.value,q=seasonSchoolSearchQuery.value.trim();if(q.length<2)throw new Error("학교명을 두 글자 이상 입력하세요.");seasonSchoolSearchResults.innerHTML=`<option value="">검색 중...</option>`;const schools=await getHighSchools(office);seasonSchoolSearchMatches=schools.filter(s=>schoolMatchesQuery(s,q)).slice(0,50);seasonSchoolSearchResults.innerHTML=seasonSchoolSearchMatches.length?seasonSchoolSearchMatches.map((s,i)=>`<option value="${i}">${esc(s.SCHUL_NM)} · ${esc(s.ORG_RDNMA||"")}</option>`).join(""):`<option value="">검색 결과 없음</option>`}catch(e){alert(e.message)}
+}
+function selectSeasonSchool(){const idx=Number(document.getElementById("seasonSchoolSearchResults").value),s=seasonSchoolSearchMatches[idx];if(!s){alert("검색 결과에서 학교를 선택하세요.");return}seasonSelectedSchool=s;document.getElementById("seasonSelectedSchool").textContent=`${s.SCHUL_NM} · ${s.ORG_RDNMA||""}`}
+function seasonOfMonth(m){return [3,4,5].includes(m)?"봄":[6,7,8].includes(m)?"여름":[9,10,11].includes(m)?"가을":"겨울"}
+function ignoreSeasonMenu(m){return /^(쌀밥|밥|백미밥|우유)$/.test(m)||/(배추김치|깍두기)$/.test(m)}
+function buildSeasonState(meals,schoolCount){
+  const seasons=["봄","여름","가을","겨울"], mealCounts=Object.fromEntries(seasons.map(s=>[s,0])), menus=new Map();
+  meals.forEach(r=>{
+    const month=Number(r.MLSV_YMD.slice(4,6)),season=seasonOfMonth(month);mealCounts[season]++;
+    [...new Set(getMenus(r))].forEach(menu=>{
+      if(ignoreSeasonMenu(menu)) return;
+      if(!menus.has(menu)) menus.set(menu,{봄:0,여름:0,가을:0,겨울:0,months:Array(12).fill(0),schools:new Set(),rows:[]});
+      const x=menus.get(menu);x[season]++;x.months[month-1]++;x.schools.add(r.__schoolCode);x.rows.push(r);
+    });
+  });
+  return {meals,schoolCount,mealCounts,menus};
+}
+function seasonRanking(season){
+  const S=seasonState,totalMeals=S.meals.length,inMeals=S.mealCounts[season],otherMeals=Math.max(1,totalMeals-inMeals),arr=[],single=S.schoolCount===1;
+  S.menus.forEach((x,menu)=>{const inCount=x[season],total=x.봄+x.여름+x.가을+x.겨울,other=total-inCount;if(single){if(inCount<2)return}else if(inCount<3||x.schools.size<2)return;const a=(inCount+1)/(inMeals+2),b=(other+1)/(otherMeals+2),lift=a/b,coverage=x.schools.size/Math.max(1,S.schoolCount),score=single?lift*Math.sqrt(inCount):lift*Math.sqrt(inCount)*Math.min(1,0.4+coverage*3);arr.push({menu,lift,score,count:inCount,schools:x.schools.size,months:x.months,rows:x.rows})});
+  return arr.sort((a,b)=>b.score-a.score);
+}
+async function runSeasonAnalysis(){
+  if(!beginAction("season","runSeasonAnalysis"))return;
+  try{
+    const year=seasonYear.value,meal=seasonMeal.value,from=`${year}-01-01`,yearEnd=`${year}-12-31`,today=localTodayISO(),to=yearEnd>today?today:yearEnd;let meals=[],schoolCount=0,label="",bundle=null;setStatus("season","계절 데이터를 준비하는 중...",2);
+    if(from>today)throw new Error("아직 시작되지 않은 연도입니다.");
+    if(seasonAnalysisMode==="school"){if(!seasonSelectedSchool)throw new Error("분석할 학교를 검색해 선택하세요.");meals=filterMealCode(await getMealsForSchool(seasonSelectedSchool,from,to,""),meal);schoolCount=1;label=seasonSelectedSchool.SCHUL_NM}else{const office=seasonRegion.value,support=seasonSupport.value;bundle=await getRegionDataset(office,from,to,(n,t,f)=>setStatus("season",`연간 지역 캐시 생성: ${n}/${t}개 학교${f?` · 현재 실패 ${f}`:""}`,n/t*88));const schools=filterBySupport(bundle.schools,office,support),ids=new Set(schools.map(s=>s.SD_SCHUL_CODE));meals=filterMealCode(bundle.meals,meal).filter(r=>ids.has(r.__schoolCode));schoolCount=schools.length;label=`${seasonRegion.options[seasonRegion.selectedIndex].text}${support==="ALL"?"":` · ${support}`}`}
+    if(!meals.length)throw new Error("선택 조건의 급식 데이터가 없습니다.");seasonState=buildSeasonState(meals,schoolCount);seasonState.scopeLabel=label;seasonState.singleSchool=schoolCount===1;seasonState.dataTo=to;seasonState.year=Number(year);renderSeasonCards();const current=seasonOfMonth(new Date().getMonth()+1),first=seasonRanking(current)[0]||["봄","여름","가을","겨울"].flatMap(s=>seasonRanking(s).slice(0,1))[0];if(first)selectSeasonMenu(first,current);const partial=to<yearEnd?` · ${to}까지 수집된 데이터`:"";setStatus("season",`완료: ${label} · 급식 ${meals.length.toLocaleString()}건${partial}${coverageSuffix(bundle)}`,100);
+  }catch(e){console.error(e);setStatus("season",`오류: ${e.message}`,0,true)}finally{endAction("season","runSeasonAnalysis")}
+}
+function renderSeasonCards(){
+  const endMonth={봄:5,여름:8,가을:11,겨울:12},startMonth={봄:3,여름:6,가을:9,겨울:12};
+  ["봄","여름","가을","겨울"].forEach(season=>{const card=document.querySelector(`.season-card[data-season="${season}"]`),box=card.querySelector(".seasonRanks"),top=seasonRanking(season).slice(0,3),to=seasonState.dataTo||`${seasonState.year}-12-31`,tm=Number(to.slice(5,7)),td=Number(to.slice(8,10)),partial=seasonState.year===Number(to.slice(0,4))&&tm<endMonth[season],notStarted=tm<startMonth[season],coverage=notStarted?"아직 데이터 없음":partial?`${tm}/${td}까지 부분 데이터`:"완료된 계절 데이터";box.innerHTML=`<div class="${partial||notStarted?"coverage-warning":"partial-note"}">${coverage}</div>`+(top.length?top.map((x,i)=>`<div class="rank-item" data-menu="${escAttr(x.menu)}"><div class="rank-no">${i+1}</div><div class="rank-text"><b>${esc(x.menu)}</b><small>특이도 ${x.lift.toFixed(2)}배 · ${seasonState.singleSchool?`${x.count}회`:`${x.schools}개교`}</small></div></div>`).join(""):"충분한 데이터 없음");[...box.querySelectorAll(".rank-item")].forEach((el,i)=>el.onclick=()=>selectSeasonMenu(top[i],season));card.onclick=e=>{if(!e.target.closest(".rank-item")&&top[0])selectSeasonMenu(top[0],season)}})
+}
+function selectSeasonMenu(item,season){
+  document.querySelectorAll(".season-card").forEach(c=>c.classList.toggle("selected",c.dataset.season===season));seasonDetailTitle.textContent=`${seasonState.scopeLabel||"분석 대상"} · ${season} · ${item.menu}`;const monthly=item.months.map(n=>seasonState.singleSchool?n:round(n/Math.max(1,seasonState.schoolCount),3));makeLine("seasonTrendChart",Array.from({length:12},(_,i)=>`${i+1}월`),[{label:seasonState.singleSchool?"월별 등장 횟수":"학교당 평균 등장 횟수",data:monthly}],"회");const candidateRows=item.rows.filter(r=>seasonOfMonth(Number(r.MLSV_YMD.slice(4,6)))===season),rep=chooseRepresentativeMeal(candidateRows,r=>seasonMealRepresentativeness(r,season,item.menu));seasonTrayTitle.textContent=`${seasonState.scopeLabel||""} · ${season} 대표 급식판`;seasonTrayNote.textContent=rep?`${rep.__schoolName} · ${displayDate(rep.MLSV_YMD)} 실제 급식 중 선택 메뉴와 계절성이 잘 드러나는 사례`:"대표 급식을 찾지 못했습니다.";renderTray("seasonTray",rep)
+}
+function seasonMealRepresentativeness(row,season,focus){
+  const ranking=seasonRanking(season).slice(0,40),rankMap=new Map(ranking.map((x,i)=>[x.menu,(40-i)/40]));
+  return getMenus(row).reduce((s,m)=>s+(rankMap.get(m)||0),0)+(getMenus(row).some(m=>m.includes(focus))?3:0);
+}
+
+/* =========================================================
+   10. 취향 설정
+   ========================================================= */
+function loadPrefs(){
+  try{return JSON.parse(localStorage.getItem(PREF_KEY))||{categories:[],favorites:[]}}catch{return {categories:[],favorites:[]}}
+}
+function savePrefs(p){localStorage.setItem(PREF_KEY,JSON.stringify(p))}
+function initPreferences(){
+  const p=loadPrefs(); prefGrid.innerHTML=""; favoriteList.innerHTML="";
+  PREF_CATEGORIES.forEach(c=>{
+    const d=document.createElement("div");d.className="pref-item"+(p.categories.includes(c.id)?" active":"");d.dataset.id=c.id;
+    d.innerHTML=`<b>${esc(c.name)}</b><small>${esc(c.desc)}</small>`;
+    d.onclick=()=>{d.classList.toggle("active");persistPreferenceUI()};prefGrid.appendChild(d);
+  });
+  FAVORITES.forEach(name=>{
+    const b=document.createElement("button");b.className="favorite"+(p.favorites.includes(name)?" active":"");b.textContent=name;b.dataset.name=name;
+    b.onclick=()=>{b.classList.toggle("active");persistPreferenceUI()};favoriteList.appendChild(b);
+  });
+}
+function persistPreferenceUI(){
+  savePrefs({categories:[...document.querySelectorAll(".pref-item.active")].map(x=>x.dataset.id),favorites:[...document.querySelectorAll(".favorite.active")].map(x=>x.dataset.name)});
+}
+function resetPreferences(){localStorage.removeItem(PREF_KEY);initPreferences()}
+function menuPreferenceMatch(menu,prefs){
+  if(!menu)return 0;if(prefs.favorites.some(f=>menu.includes(f)))return 1;
+  return prefs.categories.some(id=>{const c=PREF_CATEGORIES.find(x=>x.id===id);return c&&hasAny(menu,c.words)})?0.78:0;
+}
+function mealPreferenceScore(row,prefs=loadPrefs()){
+  if(!prefs.categories.length&&!prefs.favorites.length)return 0;
+  const s=traySlots(row),weighted=[[s.main,35],[s.side1,18],[s.side2,15],[s.rice,10],[s.soup,10],[s.extra,12]];
+  let score=0,available=0;for(const [menu,w] of weighted){if(menu&&menu!=="-"){available+=w;score+=w*menuPreferenceMatch(menu,prefs)}}
+  if(!available)return 0;return round(Math.min(100,score/available*100),1);
+}
+
+/* =========================================================
+   11. 시간 / 요일 취향 분석
+   ========================================================= */
+async function runTasteAnalysis(){
+  if(!beginAction("taste","runTasteAnalysis"))return;
+  try{const prefs=loadPrefs();if(!prefs.categories.length&&!prefs.favorites.length)throw new Error("먼저 좋아하는 음식 종류나 메뉴를 하나 이상 선택하세요.");const office=tasteRegion.value,from=tasteFrom.value,to=tasteTo.value,support=tasteSupport.value;validateRange(from,to);setStatus("taste","지역 원본 데이터를 확인하는 중...",2);const bundle=await getRegionDataset(office,from,to,(n,t,f)=>setStatus("taste",`지역 원본 캐시 생성: 전체 ${t}개 학교 중 ${n}개${f?` · 현재 실패 ${f}`:""}`,n/t*88));let schools=filterBySupport(bundle.schools,office,support);schools=schools.filter(s=>matchSchoolType(s,tasteType.value)&&matchGender(s,tasteGender.value));if(!schools.length)throw new Error("선택한 학교 유형·성별 조건에 해당하는 학교가 없습니다.");const ids=new Set(schools.map(s=>s.SD_SCHUL_CODE)),meals=bundle.meals.filter(r=>ids.has(r.__schoolCode)),scores=new Map();meals.forEach(r=>scores.set(mealKey(r),mealPreferenceScore(r,prefs)));tasteState={schools,meals,prefs,scores};renderTasteCharts();selectTasteDimension("weekday","월");setStatus("taste",`완료: ${schools.length}개 학교, 급식 ${meals.length.toLocaleString()}건 · 학교별 동일 가중${coverageSuffixForCodes(bundle,ids)}`,100)}catch(e){console.error(e);setStatus("taste",`오류: ${e.message}`,0,true)}finally{endAction("taste","runTasteAnalysis")}
+}
+function mealKey(r){return `${r.__schoolCode}|${r.MLSV_YMD}|${r.MMEAL_SC_CODE||r.MMEAL_SC_NM}|${r.DDISH_NM}`}
+function scoreFor(r){return tasteState?.scores.get(mealKey(r))??0}
+function meanScoreSchoolWeighted(rows){const g=new Map();rows.forEach(r=>{if(!g.has(r.__schoolCode))g.set(r.__schoolCode,[]);g.get(r.__schoolCode).push(scoreFor(r))});return round(mean([...g.values()].map(mean)),1)}
+function averageByLabels(rows,labels,keyFn){return labels.map(l=>meanScoreSchoolWeighted(rows.filter(r=>keyFn(r)===l)))}
+function renderTasteCharts(){
+  const weekdays=["월","화","수","목","금"],mealTypes=["조식","중식","석식"];
+  const w=averageByLabels(tasteState.meals,weekdays,weekdayName),m=averageByLabels(tasteState.meals,mealTypes,mealName);
+  makeBar("tasteWeekChart",weekdays,[{label:"취향 적합도",data:w}], "점",i=>selectTasteDimension("weekday",weekdays[i]));
+  makeBar("tasteMealChart",mealTypes,[{label:"취향 적합도",data:m}], "점",i=>selectTasteDimension("meal",mealTypes[i]));
+  weekdayButtons.innerHTML=weekdays.map(x=>`<button class="chip-btn" onclick="selectTasteDimension('weekday','${x}')">${x}요일</button>`).join("");
+  mealButtons.innerHTML=mealTypes.map(x=>`<button class="chip-btn" onclick="selectTasteDimension('meal','${x}')">${x}</button>`).join("");
+}
+function selectTasteDimension(mode,value){
+  if(!tasteState) return;
+  document.querySelectorAll("#weekdayButtons .chip-btn").forEach(b=>b.classList.toggle("active",mode==="weekday"&&b.textContent.startsWith(value)));
+  document.querySelectorAll("#mealButtons .chip-btn").forEach(b=>b.classList.toggle("active",mode==="meal"&&b.textContent===value));
+  const rows=tasteState.meals.filter(r=>mode==="weekday"?weekdayName(r)===value:mealName(r)===value);
+  renderTraitDrilldown(rows,mode,value);
+  const rep=chooseRepresentativeMeal(rows,r=>scoreFor(r));
+  tasteTrayTitle.textContent=`${mode==="weekday"?value+"요일":value} · 취향 적합 대표 급식판`;
+  tasteTrayNote.textContent=rep?`${rep.__schoolName} · ${displayDate(rep.MLSV_YMD)} · 취향 적합도 ${scoreFor(rep)}점. 실제 급식 중 취향 점수가 높으면서 메뉴 구성 반복성이 비교적 높은 한 끼입니다.`:"대표 급식을 찾지 못했습니다.";
+  renderTray("tasteTray",rep,true);
+}
+function renderTraitDrilldown(rows,mode,value){
+  const traits=traitGroups(),labels=[],values=[];traits.forEach(([name,pred])=>{const part=rows.filter(r=>pred(r.__schoolMeta)),schoolCount=new Set(part.map(r=>r.__schoolCode)).size;if(part.length>=3&&schoolCount>=1){labels.push(name);values.push(meanScoreSchoolWeighted(part))}});drillTitle.textContent=`${mode==="weekday"?value+"요일":value} · 학교 특성별 취향 적합도`;makeBar("traitChart",labels,[{label:"학교별 평균 취향점수의 평균",data:values}],"점");
+}
+
+/* =========================================================
+   12. 대표 급식 선정 / 급식판 SVG
+   ========================================================= */
+function chooseRepresentativeMeal(rows,scoreFn){
+  if(!rows.length) return null;
+  const freq=new Map();
+  rows.forEach(r=>getMenus(r).forEach(m=>freq.set(m,(freq.get(m)||0)+1)));
+  const scored=rows.map(r=>{
+    const preference=Number(scoreFn(r))||0;
+    const menus=getMenus(r),freqScore=menus.reduce((s,m)=>s+(freq.get(m)||0)/rows.length,0)/Math.max(1,menus.length);
+    return {row:r,score:preference+freqScore*12};
+  }).sort((a,b)=>b.score-a.score);
+  return scored[0]?.row||null;
+}
+function traySlots(row){
+  if(!row)return {rice:"-",soup:"-",main:"-",side1:"-",side2:"-",extra:"-"};
+  const menus=getMenus(row),used=new Set(),pick=pred=>{const i=menus.findIndex((m,idx)=>!used.has(idx)&&pred(m));if(i<0)return null;used.add(i);return menus[i]};
+  const rice=pick(m=>RICE_RE.test(m)),soup=pick(isSoupMenu),main=pick(m=>MAIN_RE.test(m)||isMeat(m)),extra=pick(m=>KIMCHI_RE.test(m)||isDessert(m));
+  const rest=menus.map((m,i)=>({m,i})).filter(x=>!used.has(x.i));const next=()=>rest.shift()?.m||"-";
+  return {rice:rice||"-",soup:soup||"-",main:main||next(),side1:next(),side2:next(),extra:extra||next()};
+}
+function shorten(s,n=14){s=String(s||"-");return s.length>n?s.slice(0,n-1)+"…":s}
+function renderEmptyTray(id,flipped=false){const slots={rice:"밥",soup:"국",main:"메인",side1:"반찬 1",side2:"반찬 2",extra:"김치/후식"};document.getElementById(id).innerHTML=flipped?traySVGFlipped(slots,true):traySVG(slots,true)}
+function renderTray(id,row,flipped=false){document.getElementById(id).innerHTML=flipped?traySVGFlipped(traySlots(row),false):traySVG(traySlots(row),false)}
+function traySVG(s,placeholder=false){
+  const fill=placeholder?"var(--tray-empty)":"var(--tray-cell)";
+  const label=(x,y,slot,name)=>`<text x="${x}" y="${y-23}" class="tray-slot-label">${slot}</text><text x="${x}" y="${y+3}" class="tray-food-label">${esc(shorten(name))}</text>`;
+  return `<svg class="tray-svg" viewBox="0 0 720 450" role="img" aria-label="급식판">
+  <defs><linearGradient id="steel" x1="0" x2="1"><stop offset="0" style="stop-color:var(--tray-steel1)"/><stop offset=".25" style="stop-color:var(--tray-steel2)"/><stop offset=".55" style="stop-color:var(--tray-steel3)"/><stop offset="1" style="stop-color:var(--tray-steel4)"/></linearGradient>
+  <filter id="shadow"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".18"/></filter></defs>
+  <rect x="18" y="18" width="684" height="414" rx="38" fill="url(#steel)" filter="url(#shadow)"/>
+  <rect x="48" y="48" width="280" height="150" rx="46" fill="${fill}" stroke="var(--tray-stroke)" stroke-width="5"/>
+  <rect x="350" y="48" width="322" height="150" rx="46" fill="${fill}" stroke="var(--tray-stroke)" stroke-width="5"/>
+  <rect x="48" y="220" width="200" height="180" rx="42" fill="${fill}" stroke="var(--tray-stroke)" stroke-width="5"/>
+  <rect x="268" y="220" width="190" height="180" rx="42" fill="${fill}" stroke="var(--tray-stroke)" stroke-width="5"/>
+  <rect x="478" y="220" width="194" height="83" rx="34" fill="${fill}" stroke="var(--tray-stroke)" stroke-width="5"/>
+  <rect x="478" y="317" width="194" height="83" rx="34" fill="${fill}" stroke="var(--tray-stroke)" stroke-width="5"/>
+  ${label(188,128,"밥",s.rice)}${label(511,128,"국",s.soup)}${label(148,316,"메인",s.main)}
+  ${label(363,316,"부반찬 1",s.side1)}${label(575,269,"부반찬 2",s.side2)}${label(575,366,"김치·후식",s.extra)}
+  </svg>`;
+}
+
+function traySVGFlipped(s,placeholder=false){
+  const fill=placeholder?"var(--tray-empty)":"var(--tray-cell)";
+  const label=(x,y,slot,name)=>`<text x="${x}" y="${y-21}" class="tray-slot-label">${slot}</text><text x="${x}" y="${y+4}" class="tray-food-label">${esc(shorten(name))}</text>`;
+  return `<svg class="tray-svg" viewBox="0 0 720 450" role="img" aria-label="밥과 국이 아래에 배치된 급식판">
+  <defs><linearGradient id="steelFlip" x1="0" x2="1"><stop offset="0" style="stop-color:var(--tray-steel1)"/><stop offset=".23" style="stop-color:var(--tray-steel2)"/><stop offset=".55" style="stop-color:var(--tray-steel3)"/><stop offset="1" style="stop-color:var(--tray-steel4)"/></linearGradient>
+  <filter id="shadowFlip"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".18"/></filter></defs>
+  <rect x="18" y="18" width="684" height="414" rx="38" fill="url(#steelFlip)" filter="url(#shadowFlip)"/>
+  <rect x="48" y="48" width="275" height="150" rx="43" fill="${fill}" stroke="var(--tray-stroke)" stroke-width="5"/>
+  <rect x="343" y="48" width="150" height="150" rx="40" fill="${fill}" stroke="var(--tray-stroke)" stroke-width="5"/>
+  <rect x="513" y="48" width="159" height="69" rx="30" fill="${fill}" stroke="var(--tray-stroke)" stroke-width="5"/>
+  <rect x="513" y="129" width="159" height="69" rx="30" fill="${fill}" stroke="var(--tray-stroke)" stroke-width="5"/>
+  <rect x="48" y="220" width="290" height="180" rx="48" fill="${fill}" stroke="var(--tray-stroke)" stroke-width="5"/>
+  <rect x="358" y="220" width="314" height="180" rx="48" fill="${fill}" stroke="var(--tray-stroke)" stroke-width="5"/>
+  ${label(185,128,"메인",s.main)}${label(418,128,"부반찬 1",s.side1)}
+  ${label(592,88,"부반찬 2",s.side2)}${label(592,169,"김치·후식",s.extra)}
+  ${label(193,315,"밥",s.rice)}${label(515,315,"국",s.soup)}
+  </svg>`;
+}
+
+function displayDate(s){return `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`}
+
+/* =========================================================
+   13. 보안상 HTML 출력 escape
+   ========================================================= */
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function escAttr(v){return esc(v).replace(/`/g,"&#096;")}
+</script>
+</body>
+</html>
